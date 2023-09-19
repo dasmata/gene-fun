@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="src/Vector.js" type="text/javascript" ></script>
+    <script src="src/Agent.js" type="text/javascript" ></script>
+    <script src="src/Population.js" type="text/javascript" ></script>
+    <script src="src/World.js" type="text/javascript" ></script>
+    <script src="src/renderers/WorldRenderer.js" type="text/javascript" ></script>
+    <script src="src/renderers/AgentRenderer.js" type="text/javascript" ></script>
+    <script src="src/neurons/weightModifier.js" type="text/javascript" ></script>
+    <script src="src/neurons/SeeLeftNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/SeeRightNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/SeeUpNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/SeeDownNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/MoveRandNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/MoveLeftNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/MoveRightNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/MoveUpNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/MoveDownNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/NegateNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/neuronPool.js" type="text/javascript" ></script>
+    <style>
+        main {
+            display: flex;
+            align-items: flex-start;
+        }
+        .world {
+            width: calc(256px * (2 + 2));
+            border: 1px solid black;
+        }
+        #canvas-wrapper {
+            width: calc(256px * (2 + 2));
+        }
+        #controls {
+            width: calc(256px * (2 + 2));
+            padding-left: 5px;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section id="canvas-wrapper"></section>
+    <section id="controls">
+        <span>Gen <span id="gen">0</span></span>
+        <button id="killSw">Kill everyone!!</button>
+        <button id="start">create</button>
+        <button id="play">play</button>
+        <button id="pause">pause</button>
+    </section>
+</main>
+<template id="agent">
+    <div>
+        <section id="details-container">
+            <h2></h2>
+            <div class="brain"></div>
+            <div class="genome"></div>
+            <button>run</button>
+        </section>
+    </div>
+</template>
+<template id="neuron">
+    <div>
+        <div id="neuron-container">
+        </div>
+    </div>
+</template>
+
+<script>
+    let currentDetails = null
+    renderAgentDetails = (agent) => {
+        if (currentDetails) {
+            document.getElementById('controls').removeChild(currentDetails);
+        }
+        const tree = document.getElementById('agent').content.cloneNode(true)
+        tree.querySelector('h2').textContent = Symbol.keyFor(agent.id)
+        tree.querySelector('button').addEventListener('click', () => {
+            console.log(agent.visualizeNeurons())
+        })
+        const ntpl = document.getElementById('neuron');
+        const brain = tree.querySelector('.brain');
+        agent.brain.forEach(conn => {
+            const ntree = ntpl.content.cloneNode(true);
+            const node = ntree.querySelector('#neuron-container');
+            node.textContent = Symbol.keyFor(conn[0]);
+            brain.appendChild(node);
+        })
+        currentDetails = tree.querySelector('#details-container');
+        document.getElementById('controls').appendChild(currentDetails);
+    }
+    const clickObserver = (e) => {
+        if (e.type != 'click') {
+            return
+        }
+        renderAgentDetails(e.payload)
+    }
+
+    const letThereBeLight = () => {
+        return new World({
+            width: 256,
+            height: 256
+        }, 1000, 10000, 10)
+    }
+
+    let killSwitch = () => {};
+    let generations = 0;
+    const genMarker = document.getElementById('gen')
+    const start = e => {
+        const world = letThereBeLight();
+        const run = () => {
+            const renderer = new WorldRenderer(world);
+            killSwitch = killEvt => {
+                if (killEvt) {
+                    world.kill();
+                    generations = 0;
+                    genMarker.textContent = generations;
+                }
+                renderer.clear();
+                document.getElementById('play').removeEventListener('click', play)
+                document.getElementById('pause').removeEventListener('click', pause)
+                e.target.addEventListener('click', start)
+            }
+            renderer.attach(clickObserver)
+            const play = () => world.play()
+            const pause = () => world.pause()
+            document.getElementById('play').addEventListener('click', play)
+            document.getElementById('pause').addEventListener('click', pause)
+            e.target.removeEventListener('click', start)
+            renderer.render()
+        }
+        world.attach({
+            update: (e) => {
+                genMarker.textContent = ++generations;
+                killSwitch();
+                run();
+            }
+        })
+
+        run()
+    }
+
+    document.getElementById('start').addEventListener('click', start)
+    document.getElementById("killSw").addEventListener('click', (e) => {
+        killSwitch(e)
+    })
+
+</script>
+</body>
+</html>
