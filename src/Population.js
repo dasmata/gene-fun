@@ -2,7 +2,7 @@ class Population extends Set{
     populationSize;
     world;
     neuronPool = null;
-    genomeSize = 4;
+    genomeSize = 6;
 
     constructor(world, size){
         super();
@@ -34,7 +34,7 @@ class Population extends Set{
         let placed = 0;
         const populationDensity = this.populationSize / ((this.world.size.width) * (this.world.size.height) )
 
-        this.forEach((agent) => {
+        const getAgentCoords = agent => {
             const layerStart = currentLayer - agentSize;
             const layerEnd = currentLayer - agentSize;
             const fixed = Math.round(Math.random()) === 1 ? -1 : 0;
@@ -59,7 +59,14 @@ class Population extends Set{
                 ],
                 [this.world.size.width - Agent.size, this.world.size.height - Agent.size]
             );
-            agent.posVector = coords;
+            if (this.world.isOccupied(coords)) {
+                return getAgentCoords(agent);
+            }
+            return coords;
+        }
+
+        this.forEach((agent) => {
+            agent.posVector = getAgentCoords(agent);
         });
     }
 

@@ -59,13 +59,27 @@ class WorldRenderer {
             document.getElementById('canvas-wrapper').appendChild(this.container);
         }
         const ctx = this.container.getContext('2d');
+        this.renderAgents(ctx);
+        this.renderWalls(ctx);
+        window.requestAnimationFrame(this.frameRenderer);
+    }
+
+    renderAgents(ctx) {
         this.agentRenderer = this.agentRenderer || new AgentRenderer(ctx);
         this.world.agents.forEach(el => {
             this.agentRenderer.render(el);
         })
-        window.requestAnimationFrame(this.frameRenderer);
     }
 
+    renderWalls(ctx) {
+        this.world.walls.forEach(wall => {
+            ctx.beginPath();
+            ctx.rect(wall[0][0], wall[0][1], wall[1][0] - wall[0][0], wall[1][1] - wall[0][1]);
+            ctx.fillStyle = '#c4c4c4';
+            ctx.fill();
+            ctx.closePath();
+        })
+    }
 
     renderBreedingAreas() {
         if( !this.breedingAreasContainer ){
@@ -78,7 +92,7 @@ class WorldRenderer {
         this.world.breedingAreas.forEach(area => {
             ctx.beginPath();
             ctx.globalAlpha = 0.1;
-            ctx.rect(area[0][0], area[0][1], area[1][0], area[1][1]);
+            ctx.rect(area[0][0], area[0][1], area[1][0] - area[0][0], area[1][1] - area[0][1]);
             ctx.fillStyle = "#FFFF66";
             ctx.fill();
             ctx.closePath();

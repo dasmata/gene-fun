@@ -24,13 +24,15 @@ class World {
     observers = new Set();
     populationSize = 1000;
     breedingAreas = []
+    walls = []
 
     constructor(
         size,
         populationSize,
         genLife = 10000,
         actionInterval = 10,
-        breedingAreas = []
+        breedingAreas = [],
+        walls
     ) {
         this.size = size;
         this.agents = new Population(this, populationSize);
@@ -40,6 +42,7 @@ class World {
         this.generationLifeTime = genLife;
         this.actionInterval = actionInterval;
         this.breedingAreas = breedingAreas;
+        this.walls = walls;
     }
 
     frame() {
@@ -86,6 +89,17 @@ class World {
 
     isOccupied(vector) {
         return this.locationIdx.has(`${vector[0]},${vector[1]}`)
+            || this.locationIdx.has(`${vector[0] - 1},${vector[1]}`)
+            || this.locationIdx.has(`${vector[0]},${vector[1] + 1}`)
+            || this.walls.reduce((acc, wall) => {
+                if (acc) {
+                   return acc;
+                }
+                return vector[0] >= wall[0][0]
+                    && vector[0] <= wall[1][0]
+                    && vector[1] >= wall[0][1]
+                    && vector[1] <= wall[1][1]
+            }, false);
     }
 
     update(agent) {
