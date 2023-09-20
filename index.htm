@@ -29,9 +29,18 @@
         .world {
             width: calc(256px * (2 + 2));
             border: 1px solid black;
+            z-index: 1;
+            position: absolute;
+        }
+        .breeding-area{
+            width: calc(256px * (2 + 2));
+            border: 1px solid black;
+            z-index: 0;
+            position: absolute;
         }
         #canvas-wrapper {
             width: calc(256px * (2 + 2));
+            position: relative;
         }
         #controls {
             width: calc(256px * (2 + 2));
@@ -97,10 +106,49 @@
     }
 
     const letThereBeLight = () => {
-        return new World({
+        const size = {
             width: 256,
             height: 256
-        }, 1000, 10000, 10)
+        };
+        return new World(
+            size,
+            1000,
+            5000,
+            10,
+            [
+                [
+                    new Vector([
+                        0,
+                        0
+                    ], [
+                        size.width,
+                        size.height
+                    ]),
+                    new Vector([
+                        size.width / 8,
+                        size.height
+                    ], [
+                       size.width,
+                       size.height
+                    ]),
+                ], [
+                    new Vector([
+                        size.width - (size.width / 8),
+                        0
+                    ], [
+                        size.width,
+                        size.height
+                    ]),
+                    new Vector([
+                        size.width,
+                        size.height
+                    ], [
+                        size.width,
+                        size.height
+                    ]),
+                ]
+            ]
+        )
     }
 
     let killSwitch = () => {};

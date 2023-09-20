@@ -1,12 +1,13 @@
 class WorldRenderer {
-    container = null
-    agentRenderer = null
+    container = null;
+    breedingAreasContainer;
+    agentRenderer = null;
     world = null;
     observers = new Set();
 
     constructor(world) {
         this.world = world
-        this.frameRenderer = this.render.bind(this)
+        this.frameRenderer = this.renderMap.bind(this)
     }
 
     handleClick = (e) => {
@@ -25,26 +26,36 @@ class WorldRenderer {
 
     createContainer(size) {
         const el = document.createElement('canvas');
-        el.classList.add('world');
         el.setAttribute('width', size.width);
         el.setAttribute('height', size.height);
-        el.addEventListener('click', this.handleClick)
 
         return el;
     }
 
     destroyContainer() {
         document.getElementById('canvas-wrapper').removeChild(this.container);
+        document.getElementById('canvas-wrapper').removeChild(this.breedingAreasContainer);
         this.container.removeEventListener('click', this.handleClick)
         this.container = null;
+        this.breedingAreasContainer = null;
     }
 
     render() {
         if (!this.world) {
            return;
         }
+        this.renderMap();
+        this.renderBreedingAreas();
+    }
+
+    renderMap() {
+        if (!this.world) {
+            return;
+        }
         if( !this.container ){
             this.container = this.createContainer(this.world.size);
+            this.container.addEventListener('click', this.handleClick)
+            this.container.classList.add('world');
             document.getElementById('canvas-wrapper').appendChild(this.container);
         }
         const ctx = this.container.getContext('2d');
@@ -53,6 +64,26 @@ class WorldRenderer {
             this.agentRenderer.render(el);
         })
         window.requestAnimationFrame(this.frameRenderer);
+    }
+
+
+    renderBreedingAreas() {
+        if( !this.breedingAreasContainer ){
+            this.breedingAreasContainer = this.createContainer(this.world.size);
+            this.breedingAreasContainer.addEventListener('click', this.handleClick)
+            this.breedingAreasContainer.classList.add('breeding-area');
+            document.getElementById('canvas-wrapper').appendChild(this.breedingAreasContainer);
+        }
+        const ctx = this.breedingAreasContainer.getContext('2d');
+        this.world.breedingAreas.forEach(area => {
+            ctx.beginPath();
+            ctx.globalAlpha = 0.1;
+            ctx.rect(area[0][0], area[0][1], area[1][0], area[1][1]);
+            ctx.fillStyle = "#FFFF66";
+            ctx.fill();
+            ctx.closePath();
+            ctx.globalAlpha = 1;
+        })
     }
 
     clear() {

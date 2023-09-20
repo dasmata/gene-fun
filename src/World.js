@@ -1,3 +1,15 @@
+const shuffle = arr => {
+    let currentIndex = arr.length;
+    let randomIndex;
+    while (currentIndex > 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [arr[currentIndex], arr[randomIndex]] = [arr[randomIndex], arr[currentIndex]];
+    }
+
+    return arr;
+}
+
 class World {
     size = {
         width: null,
@@ -10,14 +22,24 @@ class World {
     updateLoop = null;
     armageddonLoop = null;
     observers = new Set();
+    populationSize = 1000;
+    breedingAreas = []
 
-    constructor(size, populationSize, genLife = 10000, actionInterval = 10) {
-        this.size = size
-        this.agents = new Population(this, populationSize)
-        this.agents.init()
+    constructor(
+        size,
+        populationSize,
+        genLife = 10000,
+        actionInterval = 10,
+        breedingAreas = []
+    ) {
+        this.size = size;
+        this.agents = new Population(this, populationSize);
+        this.populationSize = populationSize;
+        this.agents.init();
         this.runner = this.frame.bind(this);
         this.generationLifeTime = genLife;
-        this.actionInterval = actionInterval
+        this.actionInterval = actionInterval;
+        this.breedingAreas = breedingAreas;
     }
 
     frame() {
@@ -50,23 +72,8 @@ class World {
 
     armageddon() {
         this.pause();
-        const replicators = this.findAllAgents([
-            new Vector([
-                this.size.width / 2,
-                0
-            ], [
-                this.size.width,
-                this.size.height
-            ]),
-            new Vector([
-                this.size.width,
-                this.size.height
-            ], [
-                this.size.width,
-                this.size.height
-            ]),
-        ]);
-        const newAgents = replicators.replicate(this.agents.size);
+        const replicators = this.findAllAgents(...this.breedingAreas);
+        const newAgents = replicators.replicate(this.populationSize);
         this.kill();
         this.notify({
             type: 'armageddon'
@@ -126,8 +133,10 @@ class World {
     }
 
     findAllAgents(...intervals){
-        const finds = new Population(this)
-        intervals.forEach((interval) => {
+        const finds = new Population(this);
+        const shuffledIntervals = shuffle(intervals);
+        shuffledIntervals.forEach((interval) => {
+            let nr = 0;
             this.agents.forEach((agent) => {
                 const startVector = interval[0];
                 const endVector = interval[1];
@@ -137,8 +146,10 @@ class World {
                     && vector[1] >= startVector[1] && vector[1] <= endVector[1]
                 ) {
                     finds.add(agent);
+                    nr++;
                 }
             })
+            console.log(`${interval[0][0]},${interval[0][1]}${interval[1][0]},${interval[1][1]}: `, nr);
         })
         return finds;
     }
