@@ -1,7 +1,7 @@
 class WorldRenderer {
     container = null;
-    breedingAreasContainer;
     agentRenderer = null;
+    wallRenderer = null;
     world = null;
     observers = new Set();
 
@@ -34,10 +34,8 @@ class WorldRenderer {
 
     destroyContainer() {
         document.getElementById('canvas-wrapper').removeChild(this.container);
-        document.getElementById('canvas-wrapper').removeChild(this.breedingAreasContainer);
         this.container.removeEventListener('click', this.handleClick)
         this.container = null;
-        this.breedingAreasContainer = null;
     }
 
     render() {
@@ -72,37 +70,23 @@ class WorldRenderer {
     }
 
     renderWalls(ctx) {
+        this.wallRenderer = this.wallRenderer || new WallRenderer(ctx);
         this.world.walls.forEach(wall => {
-            ctx.beginPath();
-            ctx.rect(wall[0][0], wall[0][1], wall[1][0] - wall[0][0], wall[1][1] - wall[0][1]);
-            ctx.fillStyle = '#c4c4c4';
-            ctx.fill();
-            ctx.closePath();
+            this.wallRenderer.render(wall)
         })
     }
 
     renderBreedingAreas() {
-        if( !this.breedingAreasContainer ){
-            this.breedingAreasContainer = this.createContainer(this.world.size);
-            this.breedingAreasContainer.addEventListener('click', this.handleClick)
-            this.breedingAreasContainer.classList.add('breeding-area');
-            document.getElementById('canvas-wrapper').appendChild(this.breedingAreasContainer);
-        }
-        const ctx = this.breedingAreasContainer.getContext('2d');
+        this.breedingAreasRenderer = this.breedingAreasRenderer || new BreedingAreasRenderer(this.world);
         this.world.breedingAreas.forEach(area => {
-            ctx.beginPath();
-            ctx.globalAlpha = 0.1;
-            ctx.rect(area[0][0], area[0][1], area[1][0] - area[0][0], area[1][1] - area[0][1]);
-            ctx.fillStyle = "#FFFF66";
-            ctx.fill();
-            ctx.closePath();
-            ctx.globalAlpha = 1;
+            this.breedingAreasRenderer.render(area)
         })
     }
 
     clear() {
         window.cancelAnimationFrame(this.frameRenderer);
         this.destroyContainer();
+        this.breedingAreasRenderer.clear();
         this.world = null;
     }
 

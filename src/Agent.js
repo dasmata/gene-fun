@@ -30,46 +30,11 @@ class Agent {
         this.neurons = neuronPool;
         this.parents = parents;
         this.alive = true;
-
-        this.initGenome(genomeSize);
+        this.genes = new Genes(this.neurons, genomeSize, parents);
         this.initBrain();
 
-        const genomeFingerprint = this.genes.reduce((acc, gene) => {
-            return acc.map((el, idx) => {
-                return el + gene[idx]
-            })
-        }, [0, 0, 0])
-        this.id = Symbol.for(`${genomeFingerprint},${this.x},${this.y}`)
-        this.color = `#${(~~(255/genomeFingerprint[1])).toString(16).padStart(2,'0')}${(~~(255/genomeFingerprint[2])).toString(16).padStart(2,'0')}${(~~(255/genomeFingerprint[3])).toString(16).padStart(2,'0')}`
-    }
-
-    initGenome(size){
-        if (this.parents.length < 2) {
-            this.generateGenes(size);
-            return;
-        }
-        for (let i = 0; i < size; i++) {
-            this.genes.push(this.parents[~~(Math.random() * 2)][i])
-        }
-    }
-
-    generateGenes(size) {
-        const limits = {
-            'getInputNeurons': this.neurons.getInputNeurons().length,
-            'getOutputNeurons': this.neurons.getOutputNeurons().length,
-            'getProcessingNeurons': this.neurons.getProcessingNeurons().length
-        }
-
-        for(let i = 0; i < size; i++){
-            const connectionType = ~~(Math.random() * 4)
-            this.genes.push([
-                ~~(Math.random() * limits[connectionMethods[connectionType][0]]), // neuron
-                ~~(Math.random() * limits[connectionMethods[connectionType][1]]), // neuron
-                connectionType, // connection type
-                ~~(Math.random() * 5 * (Math.round(Math.random()) ? 1 : -1)), // neuron 1 weight
-                ~~(Math.random() * 5 * (Math.round(Math.random()) ? 1 : -1)) // neuron 2 weight
-            ])
-        }
+        this.id = Symbol.for(`${this.genes.fingerprint},${this.x},${this.y}`)
+        this.color = `#${this.genes.fingerprint}`
     }
 
     initBrain() {

@@ -2,7 +2,7 @@ class Population extends Set{
     populationSize;
     world;
     neuronPool = null;
-    genomeSize = 6;
+    genomeSize = 10;
 
     constructor(world, size){
         super();
