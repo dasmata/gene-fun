@@ -76,7 +76,7 @@ class Population extends Set{
         const agents = Array.from(this);
         const newPopulation = new Population(this.world, 0);
         for(let i = 0; i < this.size; i += 2) {
-            const familySize = Math.random() * avgOffsprings + 2
+            const familySize = Math.random() * (avgOffsprings + 2)
             // const familySize = avgOffsprings
             for (let j = 0; j < familySize; j++) {
                 // if(newPopulation.size >= size){
