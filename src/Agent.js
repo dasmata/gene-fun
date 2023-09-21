@@ -20,7 +20,7 @@ class Agent {
     id = null;
     observers = new Set();
     alive = null;
-    brain = [];
+    brain = null;
     movements = [];
     parents = [];
     constructor(posVector, neuronPool, genomeSize, parents = []){
@@ -37,26 +37,19 @@ class Agent {
     }
 
     initBrain() {
+        this.brain = new Brain(this.neurons)
         this.genes.forEach((gene, idx) => {
-            this.brain.push(
-                [this.neurons[connectionMethods[gene[2]][0]]()[gene[0]], this.genes[idx - 1]?.[3] || 1]
-            );
-            this.brain.push(
-                [this.neurons[connectionMethods[gene[2]][1]]()[gene[1]], this.genes[idx - 1]?.[4] || 1]
-            );
+            this.brain.addConnection(
+                this.neurons[this.neurons[connectionMethods[gene[2]][0]]()[gene[0]]].id,
+                this.neurons[this.neurons[connectionMethods[gene[2]][1]]()[gene[1]]].id,
+                ((this.genes[idx - 1]?.[3] || 1) + (this.genes[idx - 1]?.[4] || 1)) / 2
+            )
         })
     }
 
     update() {
         if (this.alive){
-            this.brain.reduce((acc, neuron) => {
-                const neuronObj =  this.neurons[neuron[0]];
-                const result = neuronObj.main(this, acc, neuron[1])
-                if (neuronObj.type === 2){
-                    return null;
-                }
-                return result;
-            }, null)
+            this.brain.compute(this)
             this.updatePos();
         }
     }

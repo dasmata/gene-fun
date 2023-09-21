@@ -59,4 +59,4 @@ class Genes extends Array {
     }
 }
 
-Genes.mutationFactor = 100;
+Genes.mutationFactor = 1000;

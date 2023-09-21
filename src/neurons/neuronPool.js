@@ -1,20 +1,21 @@
 const neuronPool = (world) => {
     const neuronMap = {
-        [Symbol.for('sl')]: SeeLeftNeuron,
-        [Symbol.for('sr')]: SeeRightNeuron,
-        [Symbol.for('su')]: SeeUpNeuron,
-        [Symbol.for('sd')]: SeeDownNeuron,
-        [Symbol.for('mrand')]: MoveRandNeuron,
-        [Symbol.for('ml')]: MoveLeftNeuron,
-        [Symbol.for('mr')]: MoveRightNeuron,
-        [Symbol.for('mu')]: MoveUpNeuron,
-        [Symbol.for('md')]: MoveDownNeuron,
+        [Symbol.for('sl')]: seeLeftNeuron,
+        [Symbol.for('sr')]: seeRightNeuron,
+        [Symbol.for('su')]: seeUpNeuron,
+        [Symbol.for('sd')]: seeDownNeuron,
 
-        [Symbol.for('n')]: NegateNeuron,
+        [Symbol.for('mrand')]: moveRandNeuron,
+        [Symbol.for('ml')]: moveLeftNeuron,
+        [Symbol.for('mr')]: moveRandNeuron,
+        [Symbol.for('mu')]: moveUpNeuron,
+        [Symbol.for('md')]: moveDownNeuron,
+
+        [Symbol.for('n')]: negateNeuron,
     }
 
     return Object.getOwnPropertySymbols(neuronMap).reduce((acc, type) => {
-        acc[type] = new neuronMap[type](world, weightModifier)
+        acc[type] = new GenericNeuron(world, neuronMap[type])
         return acc
     }, {
         getInputNeurons: () => [

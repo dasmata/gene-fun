@@ -8,21 +8,23 @@
     <script src="src/Genes.js" type="text/javascript" ></script>
     <script src="src/Population.js" type="text/javascript" ></script>
     <script src="src/World.js" type="text/javascript" ></script>
+    <script src="src/Brain.js" type="text/javascript" ></script>
     <script src="src/renderers/WorldRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AgentRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/WallRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AreaRenderer.js" type="text/javascript" ></script>
     <script src="src/neurons/weightModifier.js" type="text/javascript" ></script>
-    <script src="src/neurons/SeeLeftNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/SeeRightNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/SeeUpNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/SeeDownNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/MoveRandNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/MoveLeftNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/MoveRightNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/MoveUpNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/MoveDownNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/NegateNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/GenericNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/seeLeftNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/seeRightNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/seeUpNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/seeDownNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/moveRandNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/moveLeftNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/moveRightNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/moveUpNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/moveDownNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/negateNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/neuronPool.js" type="text/javascript" ></script>
     <style>
         main {
@@ -159,6 +161,7 @@
             getSpawnAreas(),
             getWalls()
         )
+
     }
 
     let killSwitch = () => {};
@@ -197,6 +200,7 @@
 
         run()
     }
+
 
     document.getElementById('start').addEventListener('click', start)
     document.getElementById("killSw").addEventListener('click', (e) => {

@@ -35,7 +35,7 @@ class SpawningBounds {
         }
     }
 
-    getBounds  = function () {
+    getBounds () {
         return {
             vStart: (this.currentLayer * this.layerSize) + this.areaData[this.currentArea].location[1],
             vSize: this.layerSize - Agent.size,
@@ -50,7 +50,7 @@ class Population extends Set {
     populationSize;
     world;
     neuronPool = null;
-    genomeSize = 10;
+    genomeSize = 4;
 
     constructor(world, size){
         super();
