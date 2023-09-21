@@ -1,4 +1,52 @@
-class Population extends Set{
+class SpawningBounds {
+    areaData = [];
+    totalSpawnArea = 0;
+    populationDensity = 0;
+    layerSize = 0;
+    currentLayer = 0;
+    currentArea = 0;
+    placedLayer = 0;
+    placedArea = 0;
+
+    constructor(spawningAreas, populationSize) {
+        ({ areaData: this.areaData, totalSpawnArea: this.totalSpawnArea } = spawningAreas);
+        this.populationDensity = populationSize / this.totalSpawnArea;
+        this.layerSize = Agent.size * 3;
+
+    }
+
+    adjustLayer () {
+        this.placedLayer++;
+        const layerDensity = this.placedLayer / (this.layerSize * this.areaData[this.currentArea].size.width);
+        if (layerDensity >= this.populationDensity) {
+            this.currentLayer++;
+            this.placedLayer = 0;
+        }
+    }
+
+    adjustArea () {
+        this.placedArea++;
+        const areaDensity = this.placedArea / this.areaData[this.currentArea].surface;
+        if (areaDensity >= this.populationDensity) {
+            this.currentArea++;
+            this.placedArea = 0;
+            this.currentLayer = 0;
+            this.placedLayer = 0;
+        }
+    }
+
+    getBounds  = function () {
+        return {
+            vStart: (this.currentLayer * this.layerSize) + this.areaData[this.currentArea].location[1],
+            vSize: this.layerSize - Agent.size,
+            hStart: this.areaData[this.currentArea].location[0],
+            hSize: this.areaData[this.currentArea].size.width - Agent.size
+        }
+    }
+}
+
+
+class Population extends Set {
     populationSize;
     world;
     neuronPool = null;
@@ -16,57 +64,56 @@ class Population extends Set{
     }
 
     createAgents () {
-        for(let i = 0; i < this.populationSize; i++){
-            const agent = new Agent(
-                new Vector([0,0], [this.world.size.width, this.world.size.height]),
-                this.neuronPool,
-                this.genomeSize
-            );
-            agent.attach(this.world);
+        for(let i = 0; i < this.populationSize; i++) {
+            const agent = this.generateAgent()
             this.add(agent, true);
         }
         this.populationSize = this.size;
     }
 
+    generateAgent() {
+        const agent = new Agent(
+            new Vector([0,0], [this.world.size.width, this.world.size.height]),
+            this.neuronPool,
+            this.genomeSize
+        );
+        agent.attach(this.world);
+        return agent;
+    }
+
+    getSpawningAreasData() {
+        const areaData = this.world.spawnAreas.map(area => {
+            const size = area[1].subtract(area[0]).reduce((acc, el, idx) => {
+                if (idx) {
+                    acc.height = el;
+                    return acc;
+                }
+                acc.width = el;
+                return acc;
+            }, { width: 0, height: 0 });
+            return {
+                size,
+                location: area[0],
+                surface: size.width * size.height
+            };
+        });
+        const totalSpawnArea = areaData.reduce((acc, area) => {
+            return acc + (area.size.width * area.size.height)
+        }, 0);
+        return { areaData, totalSpawnArea }
+    }
+
     placeAgentsOnMap () {
-        const agentSize = Agent.size;
-        let currentLayer = 25;
-        let placed = 0;
-        const populationDensity = this.populationSize / ((this.world.size.width) * (this.world.size.height) )
-
-        const getAgentCoords = agent => {
-            const layerStart = currentLayer - agentSize;
-            const layerEnd = currentLayer - agentSize;
-            const fixed = Math.round(Math.random()) === 1 ? -1 : 0;
-
-            const x = Math.ceil(
-                (Math.random() * (layerEnd - (layerStart * fixed)) + (layerStart * fixed)) * (Math.round(Math.random()) === 1 ? -1 : 1) * agentSize
-            );
-            const y = Math.ceil(
-                (Math.random() * (layerEnd - (layerStart * fixed * -1)) + (layerStart * fixed * -1)) * (Math.round(Math.random()) === 1 ? -1 : 1) * agentSize
-            );
-            placed++
-            const layerDensity = (placed / (currentLayer * agentSize * 4))
-            if (layerDensity >= populationDensity) {
-                currentLayer++;
-                placed = 0;
-            }
-
-            const coords = new Vector(
-                [
-                    Math.abs( this.world.size.width - Math.abs((x + (this.world.size.width / 2)))),
-                    Math.abs(  this.world.size.height - Math.abs((y + (this.world.size.height / 2))))
-                ],
-                [this.world.size.width - Agent.size, this.world.size.height - Agent.size]
-            );
-            if (this.world.isOccupied(coords)) {
-                return getAgentCoords(agent);
-            }
-            return coords;
-        }
+        const boundsObj = new SpawningBounds(this.getSpawningAreasData(), this.populationSize)
 
         this.forEach((agent) => {
-            agent.posVector = getAgentCoords(agent);
+            agent.posVector = Population.getAgentCoords(
+                boundsObj.getBounds(),
+                Object.values(this.world.size).map(el => el - Agent.size),
+                data => !this.world.isOccupied(data)
+            );
+            boundsObj.adjustLayer();
+            boundsObj.adjustArea();
         });
     }
 
@@ -78,6 +125,12 @@ class Population extends Set{
     }
 
     replicate(size) {
+        if(this.size === 0){
+            // no one survived, next generation starts over
+            const pop = new Population(this.world, this.world.populationSize);
+            pop.init();
+            return pop;
+        }
         const avgOffsprings = Math.round(size / (this.size / 1.7));
         console.log(this.size, avgOffsprings, size)
         const agents = Array.from(this);
@@ -94,7 +147,7 @@ class Population extends Set{
                     new Vector([0,0], [this.world.size.width, this.world.size.height]),
                     this.neuronPool,
                     this.genomeSize,
-                    parents.map(el => el.genes)
+                    parents.map(el => (el || this.generateAgent()).genes)
                 );
                 agent.attach(this.world);
                 newPopulation.add(agent);
@@ -103,4 +156,27 @@ class Population extends Set{
         console.log(newPopulation.size);
         return newPopulation;
     }
+}
+
+Population.getAgentCoords = (bounds, vectorBase, validationFunction) => {
+    const x = Math.ceil(
+        Math.round(Math.random() * bounds.hSize) + bounds.hStart
+    );
+    const y = Math.ceil(
+        (Math.random() * bounds.vSize) + bounds.vStart
+    );
+
+    const coords = new Vector(
+        [
+            x,
+            y
+        ],
+        vectorBase
+    );
+
+    // if(!validationFunction(coords)){
+    //     return Population.getAgentCoords(bounds, vectorBase, validationFunction);
+    // }
+
+    return coords;
 }

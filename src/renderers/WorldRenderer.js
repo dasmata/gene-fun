@@ -2,6 +2,7 @@ class WorldRenderer {
     container = null;
     agentRenderer = null;
     wallRenderer = null;
+    areaRenderer = null;
     world = null;
     observers = new Set();
 
@@ -42,8 +43,9 @@ class WorldRenderer {
         if (!this.world) {
            return;
         }
+
         this.renderMap();
-        this.renderBreedingAreas();
+        this.renderAreas();
     }
 
     renderMap() {
@@ -64,6 +66,7 @@ class WorldRenderer {
 
     renderAgents(ctx) {
         this.agentRenderer = this.agentRenderer || new AgentRenderer(ctx);
+        ctx.clearRect(0, 0, this.world.size.width, this.world.size.height);
         this.world.agents.forEach(el => {
             this.agentRenderer.render(el);
         })
@@ -76,17 +79,20 @@ class WorldRenderer {
         })
     }
 
-    renderBreedingAreas() {
-        this.breedingAreasRenderer = this.breedingAreasRenderer || new BreedingAreasRenderer(this.world);
+    renderAreas() {
+        this.areaRenderer = this.areaRenderer || new AreaRenderer(this.world);
         this.world.breedingAreas.forEach(area => {
-            this.breedingAreasRenderer.render(area)
+            this.areaRenderer.render(area, 0)
+        });
+        this.world.spawnAreas.forEach(area => {
+            this.areaRenderer.render(area, 1)
         })
     }
 
     clear() {
         window.cancelAnimationFrame(this.frameRenderer);
         this.destroyContainer();
-        this.breedingAreasRenderer.clear();
+        this.areaRenderer.clear();
         this.world = null;
     }
 

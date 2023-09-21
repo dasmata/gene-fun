@@ -24,6 +24,7 @@ class World {
     observers = new Set();
     populationSize = 1000;
     breedingAreas = []
+    spawnAreas = []
     walls = []
 
     constructor(
@@ -32,17 +33,20 @@ class World {
         genLife = 10000,
         actionInterval = 10,
         breedingAreas = [],
+        spawnAreas = [],
         walls
     ) {
         this.size = size;
+
+        this.generationLifeTime = genLife;
+        this.actionInterval = actionInterval;
+        this.breedingAreas = breedingAreas;
+        this.spawnAreas = spawnAreas;
+        this.walls = walls;
         this.agents = new Population(this, populationSize);
         this.populationSize = populationSize;
         this.agents.init();
         this.runner = this.frame.bind(this);
-        this.generationLifeTime = genLife;
-        this.actionInterval = actionInterval;
-        this.breedingAreas = breedingAreas;
-        this.walls = walls;
     }
 
     frame() {

@@ -17,7 +17,6 @@ class Agent {
     neurons = {};
     posVector = null;
     oldPosVector = null;
-    revertPos = null;
     id = null;
     observers = new Set();
     alive = null;
@@ -78,16 +77,15 @@ class Agent {
     }
 
     updatePos() {
-        this.revertPos = this.posVector;
+        this.oldPosVector = this.posVector
         this.movements.forEach(params => {
             const [vector, method] = params
             this.posVector = this.posVector[method](vector);
         })
         this.movements = [];
         if (!this.notify()) {
-            this.posVector = this.revertPos;
+            this.posVector = this.oldPosVector;
         }
-        this.revertPos = null;
     }
 
     die(){
@@ -103,8 +101,6 @@ class Agent {
             2. it allows data from outside the process (not requested by the process) to change the process behaviour
            The world object is the only one who knows if a point on the map is free or occupied by another agent.
            If the point on the map where the agent is trying to move is occupied (not free) the movement should be prevented.
-           Hence, the revertSignal and the revertPos. I could not use oldPos because that is used by the renderer. It is also updated
-           and maintained based on the framerate (the agent can change its position multiple times per frame).
            If the world observer returns false, the movement is aborted.
            This is similar to the event propagation mechanism found in Vanilla JS but in this case it is not consistently implemented
            wherever an observer pattern is used.

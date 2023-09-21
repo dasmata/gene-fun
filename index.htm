@@ -11,7 +11,7 @@
     <script src="src/renderers/WorldRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AgentRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/WallRenderer.js" type="text/javascript" ></script>
-    <script src="src/renderers/BreedingAreasRenderer.js" type="text/javascript" ></script>
+    <script src="src/renderers/AreaRenderer.js" type="text/javascript" ></script>
     <script src="src/neurons/weightModifier.js" type="text/javascript" ></script>
     <script src="src/neurons/SeeLeftNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/SeeRightNeuron.js" type="text/javascript" ></script>
@@ -114,50 +114,37 @@
     };
 
     const getWalls = () => [
-        [new Vector([60,80], Object.values(size)), new Vector([62,160], Object.values(size))],
-        [new Vector([180,80], Object.values(size)), new Vector([182,160], Object.values(size))],
-        [new Vector([80,60], Object.values(size)), new Vector([160,62], Object.values(size))],
-        [new Vector([80,180], Object.values(size)), new Vector([160,182], Object.values(size))],
+        [new Vector([60,30], Object.values(size)), new Vector([69,120], Object.values(size))],
+        [new Vector([60,150], Object.values(size)), new Vector([69,230], Object.values(size))],
+        [new Vector([180,80], Object.values(size)), new Vector([189,160], Object.values(size))],
     ]
 
     const getBreedingAreas = () => [
         [
             new Vector([
-                0,
-                0
-            ], Object.values(size)),
-            new Vector([
-                size.width / 8,
-                size.height / 8
-            ], Object.values(size)),
-        ], [
-            new Vector([
                 size.width - (size.width / 8),
                 0
             ], Object.values(size)),
             new Vector([
                 size.width,
-                size.height / 8
-            ], Object.values(size)),
-        ], [
-            new Vector([
-                0,
-                size.height - (size.height / 8)
-            ], Object.values(size)),
-            new Vector([
-                size.width / 8,
                 size.height
             ], Object.values(size)),
         ],
+    ]
+
+    const getSpawnAreas = () => [
+        // [
+        //     new Vector([0, 0], Object.values(size)),
+        //     new Vector([256, 256], Object.values(size)),
+        // ],
         [
-            new Vector([
-                size.width - (size.width / 8),
-                size.height - (size.height / 8)
-            ], Object.values(size)),
-            new Vector([
-                size.width,
-                size.height
-            ], Object.values(size)),
+            new Vector([0, 30], Object.values(size)),
+            new Vector([size.width / 8, 120], Object.values(size)),
+        ],
+        //
+        [
+            new Vector([0, 150], Object.values(size)),
+            new Vector([size.width / 8, 230], Object.values(size)),
         ]
     ]
 
@@ -169,6 +156,7 @@
             10000,
             16,
             getBreedingAreas(),
+            getSpawnAreas(),
             getWalls()
         )
     }
