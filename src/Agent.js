@@ -23,21 +23,27 @@ class Agent {
     brain = null;
     movements = [];
     parents = [];
-    constructor(posVector, neuronPool, genomeSize, parents = []){
+    constructor(
+        posVector,
+        neuronPool,
+        genomeSize,
+        parents = [],
+        rewardFunction
+    ){
         this.posVector = posVector;
         this.oldPosVector = posVector;
         this.neurons = neuronPool;
         this.parents = parents;
         this.alive = true;
         this.genes = new Genes(this.neurons, genomeSize, parents);
-        this.initBrain();
+        this.initBrain(rewardFunction);
 
         this.id = Symbol.for(`${this.genes.fingerprint},${this.x},${this.y}`)
         this.color = `#${this.genes.fingerprint}`
     }
 
-    initBrain() {
-        this.brain = new Brain(this.neurons)
+    initBrain(rewardFunction) {
+        this.brain = new Brain(this.neurons, this, rewardFunction)
         this.genes.forEach((gene, idx) => {
             this.brain.addConnection(
                 this.neurons[this.neurons[connectionMethods[gene[2]][0]]()[gene[0]]].id,
@@ -49,9 +55,16 @@ class Agent {
 
     update() {
         if (this.alive){
-            this.brain.compute(this)
+            const result = this.brain.compute();
             this.updatePos();
+            this.updateGenesFromConnections(this.brain.evaluate(result))
         }
+    }
+
+    updateGenesFromConnections(connections) {
+        Object.keys(connections).forEach((key, idx) => {
+            this.genes[idx][5] = connections[key][1];
+        })
     }
 
     visualizeNeurons() {

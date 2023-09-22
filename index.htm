@@ -13,7 +13,6 @@
     <script src="src/renderers/AgentRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/WallRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AreaRenderer.js" type="text/javascript" ></script>
-    <script src="src/neurons/weightModifier.js" type="text/javascript" ></script>
     <script src="src/neurons/GenericNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/seeLeftNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/seeRightNeuron.js" type="text/javascript" ></script>
@@ -24,7 +23,8 @@
     <script src="src/neurons/moveRightNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/moveUpNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/moveDownNeuron.js" type="text/javascript" ></script>
-    <script src="src/neurons/negateNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/processingNegateNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/processingVoidNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/neuronPool.js" type="text/javascript" ></script>
     <style>
         main {
@@ -118,7 +118,7 @@
     const getWalls = () => [
         [new Vector([60,30], Object.values(size)), new Vector([69,120], Object.values(size))],
         [new Vector([60,150], Object.values(size)), new Vector([69,230], Object.values(size))],
-        [new Vector([180,80], Object.values(size)), new Vector([189,160], Object.values(size))],
+        // [new Vector([180,80], Object.values(size)), new Vector([189,160], Object.values(size))],
     ]
 
     const getBreedingAreas = () => [
@@ -137,13 +137,12 @@
     const getSpawnAreas = () => [
         // [
         //     new Vector([0, 0], Object.values(size)),
-        //     new Vector([256, 256], Object.values(size)),
+        //     new Vector([size.width, size.height], Object.values(size)),
         // ],
         [
             new Vector([0, 30], Object.values(size)),
             new Vector([size.width / 8, 120], Object.values(size)),
         ],
-        //
         [
             new Vector([0, 150], Object.values(size)),
             new Vector([size.width / 8, 230], Object.values(size)),
@@ -151,17 +150,50 @@
     ]
 
     const letThereBeLight = () => {
+        const spawnAreas = getSpawnAreas()
+        const generateAgent = (neuronPool, genomeSize, world) => (parents = []) => {
+            const agent = new Agent(
+                new Vector([0,0], [world.size.width, world.size.height]),
+                neuronPool,
+                genomeSize,
+                parents,
+                function (agent) {
+                    return Math.max(...world.breedingAreas.map(area => {
+                        const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
+                        const distance = [agent.posVector[0] - middle[0], agent.posVector[1] - middle[1]];
+                        const oldDistance = [agent.oldPosVector[0] - middle[0], agent.oldPosVector[1] - middle[1]];
+
+                        const diffX = distance[0] - oldDistance[0];
+                        const diffY = distance[1] - oldDistance[1];
+                        return (diffX < 0 ? -1 : (diffX > 0 ? 1 : 0)) + (diffY < 0 ? -1 : (diffY > 0 ? 1 : 0));
+                    }))
+                }
+            );
+            agent.attach(world);
+            return agent;
+        }
+
+        const populationFactory = (world, size = 2000) => {
+            return new Population(
+                world,
+                size,
+                generateAgent(
+                    neuronPool(world),
+                    4,
+                    world
+                )
+            );
+        }
 
         return new World(
             size,
-            1000,
             10000,
             16,
             getBreedingAreas(),
-            getSpawnAreas(),
-            getWalls()
+            spawnAreas,
+            getWalls(),
+            populationFactory
         )
-
     }
 
     let killSwitch = () => {};

@@ -50,13 +50,16 @@ class Population extends Set {
     populationSize;
     world;
     neuronPool = null;
-    genomeSize = 4;
+    genomeSize = 10;
+    agentGenerator = null;
 
-    constructor(world, size){
+
+    constructor(world, size, agentGenerator){
         super();
         this.neuronPool = neuronPool(world)
         this.world = world;
         this.populationSize = size;
+        this.agentGenerator = agentGenerator;
     }
     init () {
         this.createAgents();
@@ -71,14 +74,8 @@ class Population extends Set {
         this.populationSize = this.size;
     }
 
-    generateAgent() {
-        const agent = new Agent(
-            new Vector([0,0], [this.world.size.width, this.world.size.height]),
-            this.neuronPool,
-            this.genomeSize
-        );
-        agent.attach(this.world);
-        return agent;
+    generateAgent(parents) {
+        return this.agentGenerator(parents);
     }
 
     getSpawningAreasData() {
@@ -104,7 +101,7 @@ class Population extends Set {
     }
 
     placeAgentsOnMap () {
-        const boundsObj = new SpawningBounds(this.getSpawningAreasData(), this.populationSize)
+        const boundsObj = new SpawningBounds(this.getSpawningAreasData(), this.size)
 
         this.forEach((agent) => {
             agent.posVector = Population.getAgentCoords(
@@ -124,17 +121,10 @@ class Population extends Set {
        }
     }
 
-    replicate(size) {
-        if(this.size === 0){
-            // no one survived, next generation starts over
-            const pop = new Population(this.world, this.world.populationSize);
-            pop.init();
-            return pop;
-        }
+    replicate(size, newPopulation) {
         const avgOffsprings = Math.round(size / (this.size / 1.7));
         console.log(this.size, avgOffsprings, size)
         const agents = Array.from(this);
-        const newPopulation = new Population(this.world, 0);
         for(let i = 0; i < this.size; i += 2) {
             const familySize = Math.random() * (avgOffsprings + 2)
             // const familySize = avgOffsprings
@@ -143,14 +133,9 @@ class Population extends Set {
                 //     break;
                 // }
                 const parents = [(agents?.[i] || agents[i-1]), (agents?.[i+1] || agents[i-2])]
-                const agent = new Agent(
-                    new Vector([0,0], [this.world.size.width, this.world.size.height]),
-                    this.neuronPool,
-                    this.genomeSize,
-                    parents.map(el => (el || this.generateAgent()).genes)
-                );
+                const agent = this.generateAgent(parents.map(el => (el || this.generateAgent()).genes));
                 agent.attach(this.world);
-                newPopulation.add(agent);
+                newPopulation.add(agent, true);
             }
         }
         console.log(newPopulation.size);

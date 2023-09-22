@@ -22,19 +22,19 @@ class World {
     updateLoop = null;
     armageddonLoop = null;
     observers = new Set();
-    populationSize = 1000;
-    breedingAreas = []
-    spawnAreas = []
-    walls = []
+    breedingAreas = [];
+    spawnAreas = [];
+    walls = [];
+    populationFactory;
 
     constructor(
         size,
-        populationSize,
         genLife = 10000,
         actionInterval = 10,
         breedingAreas = [],
         spawnAreas = [],
-        walls
+        walls,
+        populationFactory
     ) {
         this.size = size;
 
@@ -43,10 +43,10 @@ class World {
         this.breedingAreas = breedingAreas;
         this.spawnAreas = spawnAreas;
         this.walls = walls;
-        this.agents = new Population(this, populationSize);
-        this.populationSize = populationSize;
-        this.agents.init();
         this.runner = this.frame.bind(this);
+        this.agents = populationFactory(this);
+        this.agents.init();
+        this.populationFactory = populationFactory;
     }
 
     frame() {
@@ -80,7 +80,12 @@ class World {
     armageddon() {
         this.pause();
         const replicators = this.findAllAgents(...this.breedingAreas);
-        const newAgents = replicators.replicate(this.populationSize);
+        const newAgents = this.populationFactory(this);
+        if (replicators.size > 0) {
+            replicators.replicate(this.agents.populationSize, newAgents);
+        } else {
+            newAgents.init();
+        }
         this.kill();
         this.notify({
             type: 'armageddon'
@@ -151,7 +156,7 @@ class World {
     }
 
     findAllAgents(...intervals){
-        const finds = new Population(this);
+        const finds = this.populationFactory(this);
         const shuffledIntervals = shuffle(intervals);
         shuffledIntervals.forEach((interval) => {
             let nr = 0;

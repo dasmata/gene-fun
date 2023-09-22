@@ -2,7 +2,10 @@ class Brain {
     levels = []
     connections = {};
     levelIndex = {};
-    constructor(neurons) {
+    agent = null;
+    rewardFunction;
+    constructor(neurons, agent, rewardFunction) {
+        this.agent = agent;
         const mappingFunc = lvl => (el, idx) => {
             this.levelIndex[neurons[el].id] = [lvl, idx]
             return neurons[el];
@@ -11,7 +14,8 @@ class Brain {
             neurons.getInputNeurons().map(mappingFunc(0)),
             neurons.getProcessingNeurons().map(mappingFunc(1)),
             neurons.getOutputNeurons().map(mappingFunc(2))
-        ]
+        ];
+        this.rewardFunction = rewardFunction;
     }
 
     addConnection(neuron1, neuron2, weight) {
@@ -20,38 +24,79 @@ class Brain {
     }
 
     weightFunction(inputs, weights) {
-        return Math.abs(inputs.reduce((acc, el) => acc + el, 0) / weights.reduce((acc, el) => acc + el, 0))
+        return Math.abs(inputs.reduce((acc, el, idx) => {
+            acc += weights[idx] ? el / weights[idx] : 0;
+            return acc;
+        }, 0) / weights.length)
     }
 
-    compute(agent) {
+    compute() {
         return this.levels.reduce((lvlResults, lvl, i) => {
             if (lvlResults) {
+                const resultsObj = {}
                 Object.keys(lvlResults).forEach((source) => {
                     this.connections[source]?.forEach(connection => {
                         const [level, idx] = this.levelIndex[connection[0]] || [-1, -1];
+
                         if (level === i){
-                            const resArr = lvlResults[lvl[idx].id] || []
-                            resArr.push({val: lvl[idx].main(agent, lvlResults[source]), weight: connection[1]});
-                            lvlResults[lvl[idx].id] = resArr;
+                            resultsObj[lvl[idx].id] = resultsObj[lvl[idx].id] || [];
+                            resultsObj[lvl[idx].id].push({val: lvl[idx].main(this.agent, lvlResults[source].val), weight: connection[1]});
                         }
                     })
                 });
-                Object.keys(lvlResults).forEach(key => {
-                    if(lvlResults[key].length < 2){
+                Object.keys(resultsObj).forEach(key => {
+                    if(resultsObj[key].length < 2){
+                        lvlResults[key] = resultsObj[key][0];
                         return true;
                     }
-                    lvlResults[key] = [ { val: Math.round(this.weightFunction(...lvlResults[key].reduce((sums, el) => {
+                    const sums = resultsObj[key].reduce((sums, el) => {
                         sums[0].push(el.val);
-                        sums[1].push(el.weight || 1);
+                        sums[1].push(el.weight);
                         return sums;
-                    }, [[], []]))), weight: null }];
+                    }, [[], []]);
+
+                    const val = Math.round(this.weightFunction(sums[0], sums[1]))
+                    lvlResults[key] = { val, weight: resultsObj[key] };
                 })
                 return lvlResults;
             }
             return lvl.reduce((acc, neuron) => {
-                acc[neuron.id] = [{val: neuron.main(agent), weight: null}];
+                acc[neuron.id] = {val: neuron.main(this.agent), weight: null};
                 return acc;
             }, {})
         }, null);
+    }
+
+    evaluate(result) {
+        const reward = this.rewardFunction(this.agent);
+        this.levels[this.levels.length - 1].forEach(neuron => {
+            if (!result[neuron.id]) {
+                return true;
+            }
+            this.updateConnectionsWeight(neuron.id, reward);
+        })
+        return this.connections;
+    }
+
+    updateConnectionsWeight(destNeuronId, reward, changed = []) {
+        Object.keys(this.connections).forEach((source) => {
+            this.connections[source].forEach((dest, idx) => {
+                let newWeight;
+                if(dest[0] === destNeuronId){
+                    newWeight = dest[1] + reward;
+                    if (!changed.includes(source)){
+                        changed.push(source)
+                        this.updateConnectionsWeight(source, reward, changed);
+                    }
+                } else {
+                    // newWeight = dest[1] + reward
+                }
+                dest[1] = newWeight > Genes.weightInterval[1]
+                    ? Genes.weightInterval[1]
+                    : (newWeight < Genes.weightInterval[0]
+                        ? Genes.weightInterval[0]
+                        : newWeight)
+            })
+        })
     }
 }

@@ -36,13 +36,14 @@ class Genes extends Array {
     }
 
     createGene() {
-        const connectionType = ~~(Math.random() * 4)
+        const connectionType = ~~(Math.random() * (Object.keys(this.limits).length + 1))
+        const maxWeight = (Genes.weightInterval[1] + 1);
         this.push([
             ~~(Math.random() * this.limits[connectionMethods[connectionType][0]]), // neuron
             ~~(Math.random() * this.limits[connectionMethods[connectionType][1]]), // neuron
             connectionType, // connection type
-            ~~(Math.random() * 5 * (Math.round(Math.random()) ? 1 : -1)), // neuron 1 weight
-            ~~(Math.random() * 5 * (Math.round(Math.random()) ? 1 : -1)) // neuron 2 weight
+            ~~(Math.random() * maxWeight * (Math.round(Math.random()) ? 1 : -1)), // neuron 1 weight
+            ~~(Math.random() * maxWeight * (Math.round(Math.random()) ? 1 : -1)) // neuron 2 weight
         ])
     }
 
@@ -59,4 +60,5 @@ class Genes extends Array {
     }
 }
 
-Genes.mutationFactor = 1000;
+Genes.mutationFactor = 100;
+Genes.weightInterval = [-4, 4];
