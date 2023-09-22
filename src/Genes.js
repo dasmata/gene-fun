@@ -60,5 +60,5 @@ class Genes extends Array {
     }
 }
 
-Genes.mutationFactor = 100;
+Genes.mutationFactor = 1000;
 Genes.weightInterval = [-4, 4];

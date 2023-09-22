@@ -104,7 +104,7 @@
         document.getElementById('controls').appendChild(currentDetails);
     }
     const clickObserver = (e) => {
-        if (e.type != 'click') {
+        if (e.type !== 'click') {
             return
         }
         renderAgentDetails(e.payload)
@@ -115,112 +115,189 @@
         height: 256
     };
 
-    const getWalls = () => [
-        [new Vector([60,30], Object.values(size)), new Vector([69,120], Object.values(size))],
-        [new Vector([60,150], Object.values(size)), new Vector([69,230], Object.values(size))],
-        // [new Vector([180,80], Object.values(size)), new Vector([189,160], Object.values(size))],
-    ]
-
-    const getBreedingAreas = () => [
-        [
-            new Vector([
-                size.width - (size.width / 8),
-                0
-            ], Object.values(size)),
-            new Vector([
-                size.width,
-                size.height
-            ], Object.values(size)),
-        ],
-    ]
-
-    const getSpawnAreas = () => [
-        // [
-        //     new Vector([0, 0], Object.values(size)),
-        //     new Vector([size.width, size.height], Object.values(size)),
-        // ],
-        [
-            new Vector([0, 30], Object.values(size)),
-            new Vector([size.width / 8, 120], Object.values(size)),
-        ],
-        [
-            new Vector([0, 150], Object.values(size)),
-            new Vector([size.width / 8, 230], Object.values(size)),
-        ]
-    ]
-
-    const letThereBeLight = () => {
-        const spawnAreas = getSpawnAreas()
-        const generateAgent = (neuronPool, genomeSize, world) => (parents = []) => {
-            const agent = new Agent(
-                new Vector([0,0], [world.size.width, world.size.height]),
-                neuronPool,
-                genomeSize,
-                parents,
-                function (agent) {
-                    return Math.max(...world.breedingAreas.map(area => {
-                        const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
-                        const distance = [agent.posVector[0] - middle[0], agent.posVector[1] - middle[1]];
-                        const oldDistance = [agent.oldPosVector[0] - middle[0], agent.oldPosVector[1] - middle[1]];
-
-                        const diffX = distance[0] - oldDistance[0];
-                        const diffY = distance[1] - oldDistance[1];
-                        return (diffX < 0 ? -1 : (diffX > 0 ? 1 : 0)) + (diffY < 0 ? -1 : (diffY > 0 ? 1 : 0));
-                    }))
-                }
-            );
-            agent.attach(world);
-            return agent;
+    const levels = [
+        // lvl 1
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([size.width - (size.width / 2), 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ]
+            ]
+        },
+        // lvl 2
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([size.width - (size.width / 2), 0], Object.values(size)),
+                    new Vector([size.width, (size.height / 2) - 20], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 2), (size.height / 2) + 20], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ]
+            ]
+        },
+        // lvl 3
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([size.width - (size.width / 2), 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ]
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 2, size.height], Object.values(size)),
+                ]
+            ]
+        },
+        // lvl 4
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([size.width - (size.width / 8), 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 2, size.height], Object.values(size)),
+                ]
+            ]
+        },
+        //lvl 5
+        {
+            walls: [
+                [new Vector([60,30], Object.values(size)), new Vector([69,120], Object.values(size))],
+                [new Vector([60,150], Object.values(size)), new Vector([69,230], Object.values(size))],
+            ],
+            breedingAreas: [
+                new Vector([size.width - (size.width / 8), 0], Object.values(size)),
+                new Vector([size.width, size.height], Object.values(size)),
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 30], Object.values(size)),
+                    new Vector([size.width / 8, 120], Object.values(size)),
+                ],
+                [
+                    new Vector([0, 150], Object.values(size)),
+                    new Vector([size.width / 8, 230], Object.values(size)),
+                ]
+            ]
         }
+    ]
 
-        const populationFactory = (world, size = 2000) => {
-            return new Population(
-                world,
-                size,
-                generateAgent(
-                    neuronPool(world),
-                    4,
-                    world
-                )
-            );
-        }
+    const generateAgent = (neuronPool, genomeSize, world) => (parents = []) => {
+        const agent = new Agent(
+            new Vector([0,0], [world.size.width, world.size.height]),
+            neuronPool,
+            genomeSize,
+            parents,
+            function (agent) {
+                return Math.max(...world.breedingAreas.map(area => {
+                    const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
+                    const distance = [agent.posVector[0] - middle[0], agent.posVector[1] - middle[1]];
+                    const oldDistance = [agent.oldPosVector[0] - middle[0], agent.oldPosVector[1] - middle[1]];
 
-        return new World(
+                    const diffX = distance[0] - oldDistance[0];
+                    const diffY = distance[1] - oldDistance[1];
+                    return (diffX < 0 ? -1 : (diffX > 0 ? 1 : 0)) + (diffY < 0 ? -1 : (diffY > 0 ? 1 : 0));
+                }))
+            }
+        );
+        agent.attach(world);
+        return agent;
+    }
+
+    const populationFactory = (world, size = 2000) => {
+        return new Population(
+            world,
+            size,
+            generateAgent(
+                neuronPool(world),
+                10,
+                world
+            )
+        );
+    }
+
+    const letThereBeLight = (observers) => {
+        const world = new World(
             size,
             10000,
             16,
-            getBreedingAreas(),
-            spawnAreas,
-            getWalls(),
+            levels,
             populationFactory
         )
+        observers.forEach(obj => world.attach(obj));
+
+        return world;
+    }
+
+    startRendering = (world, observers = []) => {
+        const renderer = new WorldRenderer(world);
+        observers.forEach(obs => renderer.attach(obs))
+        renderer.attach(clickObserver);
+        renderer.render();
+        return [ renderer, () => {
+            observers.forEach(obs => renderer.detach(obs))
+            renderer.clear();
+        } ];
     }
 
     let killSwitch = () => {};
     let generations = 0;
     const genMarker = document.getElementById('gen')
     const start = e => {
-        const world = letThereBeLight();
+        let destroyRenderer;
+        const world = letThereBeLight([
+            {update: e => {
+                if (e.type === 'levelUp')  {
+                    if (destroyRenderer){
+                        destroyRenderer();
+                    }
+                    [, destroyRenderer] = startRendering(world, [clickObserver]);
+                }
+            }}
+        ]);
         const run = () => {
-            const renderer = new WorldRenderer(world);
+            [, destroyRenderer] = startRendering(world, [clickObserver]);
             killSwitch = killEvt => {
                 if (killEvt) {
                     world.kill();
                     generations = 0;
                     genMarker.textContent = generations;
                 }
-                renderer.clear();
+                destroyRenderer();
                 document.getElementById('play').removeEventListener('click', play)
                 document.getElementById('pause').removeEventListener('click', pause)
                 e.target.addEventListener('click', start)
             }
-            renderer.attach(clickObserver)
             const play = () => world.play()
             const pause = () => world.pause()
             document.getElementById('play').addEventListener('click', play)
             document.getElementById('pause').addEventListener('click', pause)
             e.target.removeEventListener('click', start)
-            renderer.render()
         }
         world.attach({
             update: (e) => {

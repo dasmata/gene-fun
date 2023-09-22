@@ -89,7 +89,7 @@ class Brain {
                         this.updateConnectionsWeight(source, reward, changed);
                     }
                 } else {
-                    // newWeight = dest[1] + reward
+                    newWeight = dest[1] + reward
                 }
                 dest[1] = newWeight > Genes.weightInterval[1]
                     ? Genes.weightInterval[1]

@@ -26,27 +26,32 @@ class World {
     spawnAreas = [];
     walls = [];
     populationFactory;
+    levels = [];
+    level = 0;
 
     constructor(
         size,
         genLife = 10000,
         actionInterval = 10,
-        breedingAreas = [],
-        spawnAreas = [],
-        walls,
-        populationFactory
+        levels,
+        populationFactory,
     ) {
         this.size = size;
 
+        this.levels = levels;
         this.generationLifeTime = genLife;
         this.actionInterval = actionInterval;
-        this.breedingAreas = breedingAreas;
-        this.spawnAreas = spawnAreas;
-        this.walls = walls;
+        this.initLevel();
         this.runner = this.frame.bind(this);
         this.agents = populationFactory(this);
         this.agents.init();
         this.populationFactory = populationFactory;
+    }
+
+    initLevel() {
+        this.walls = this.levels[this.level].walls;
+        this.spawnAreas = this.levels[this.level].spawnAreas;
+        this.breedingAreas = this.levels[this.level].breedingAreas;
     }
 
     frame() {
@@ -80,6 +85,21 @@ class World {
     armageddon() {
         this.pause();
         const replicators = this.findAllAgents(...this.breedingAreas);
+        if(replicators.size >= this.agents.populationSize) {
+            this.level++;
+            if(!this.levels[this.level]){
+            this.notify({
+                type: 'taskComplete'
+            });
+                return;
+            }
+            this.initLevel();
+            this.startNewGen(replicators);
+            this.notify({
+                type: 'levelUp'
+            });
+            return;
+        }
         const newAgents = this.populationFactory(this);
         if (replicators.size > 0) {
             replicators.replicate(this.agents.populationSize, newAgents);
@@ -90,9 +110,13 @@ class World {
         this.notify({
             type: 'armageddon'
         });
-        this.agents = newAgents;
-        this.agents.placeAgentsOnMap();
+        this.startNewGen(newAgents);
+    }
+
+    startNewGen(population){
+        this.agents = population;
         this.locationIdx = new Set();
+        this.agents.placeAgentsOnMap();
         this.play();
     }
 
