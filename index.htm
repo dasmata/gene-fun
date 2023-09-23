@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script src="src/Observable.js" type="text/javascript" ></script>
     <script src="src/Vector.js" type="text/javascript" ></script>
     <script src="src/Agent.js" type="text/javascript" ></script>
     <script src="src/Genes.js" type="text/javascript" ></script>
@@ -11,6 +12,7 @@
     <script src="src/Brain.js" type="text/javascript" ></script>
     <script src="src/renderers/WorldRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AgentRenderer.js" type="text/javascript" ></script>
+    <script src="src/renderers/AgentDetailsRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/WallRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AreaRenderer.js" type="text/javascript" ></script>
     <script src="src/neurons/GenericNeuron.js" type="text/javascript" ></script>
@@ -27,6 +29,13 @@
     <script src="src/neurons/processingVoidNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/neuronPool.js" type="text/javascript" ></script>
     <style>
+        :root {
+            --neuron-size: 40px;
+        }
+        h1,h2,h3,h4 {
+            padding: 0;
+            margin: 0;
+        }
         main {
             display: flex;
             align-items: flex-start;
@@ -51,6 +60,43 @@
             width: calc(256px * (2 + 2));
             padding-left: 5px;
         }
+        .brain {
+            padding: 10px 0;
+        }
+        .level {
+            width: 500px;
+            display: flex;
+        }
+        .level h4 {
+            height: var(--neuron-size);
+            padding: 5px;
+            line-height: var(--neuron-size);
+            width: 100px;
+        }
+        svg {
+            display: block;
+            margin-left: 110px;
+        }
+        .level-neurons {
+            width: 390px;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+        .level-neurons div {
+            margin: 0 5px;
+            border: 1px solid black;
+            border-radius: 50%;
+            padding: 5px;
+            width: var(--neuron-size);
+            height: var(--neuron-size);
+            text-align: center;
+            line-height: var(--neuron-size);
+        }
+
+        .level-neurons .result {
+            border-radius: 0;
+        }
     </style>
 </head>
 <body>
@@ -62,54 +108,33 @@
         <button id="start">create</button>
         <button id="play">play</button>
         <button id="pause">pause</button>
+        <div style="padding:10px">
+
+        </div>
     </section>
 </main>
 <template id="agent">
     <div>
         <section id="details-container">
-            <h2></h2>
-            <div class="brain"></div>
-            <div class="genome"></div>
-            <button>run</button>
-        </section>
+                <h2></h2>
+                <div class="brain"></div>
+                <div class="genome"></div>
+                <button class="clear">clear</button>
+                <button class="compute">compute</button>
+            </section>
     </div>
 </template>
-<template id="neuron">
-    <div>
-        <div id="neuron-container">
+<template id="level">
+    <div class="level-row">
+        <div class="level">
+            <h4 class="layer-title"></h4>
+            <div class="level-neurons"></div>
         </div>
+        <svg width="390" height="40" id="connections"></svg>
     </div>
 </template>
 
 <script>
-    let currentDetails = null
-    renderAgentDetails = (agent) => {
-        if (currentDetails) {
-            document.getElementById('controls').removeChild(currentDetails);
-        }
-        const tree = document.getElementById('agent').content.cloneNode(true)
-        tree.querySelector('h2').textContent = Symbol.keyFor(agent.id)
-        tree.querySelector('button').addEventListener('click', () => {
-            console.log(agent.visualizeNeurons())
-        })
-        const ntpl = document.getElementById('neuron');
-        const brain = tree.querySelector('.brain');
-        agent.brain.forEach(conn => {
-            const ntree = ntpl.content.cloneNode(true);
-            const node = ntree.querySelector('#neuron-container');
-            node.textContent = Symbol.keyFor(conn[0]);
-            brain.appendChild(node);
-        })
-        currentDetails = tree.querySelector('#details-container');
-        document.getElementById('controls').appendChild(currentDetails);
-    }
-    const clickObserver = (e) => {
-        if (e.type !== 'click') {
-            return
-        }
-        renderAgentDetails(e.payload)
-    }
-
     const size = {
         width: 256,
         height: 256
@@ -121,8 +146,47 @@
             walls: [],
             breedingAreas: [
                 [
-                    new Vector([size.width - (size.width / 2), 0], Object.values(size)),
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 2.5, size.height / 2.5], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 2.5), 0], Object.values(size)),
+                    new Vector([size.width, size.height / 2.5], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 2.5), size.height - (size.height / 2.5)], Object.values(size)),
                     new Vector([size.width, size.height], Object.values(size)),
+                ],
+                [
+                    new Vector([0, size.height - (size.height / 2.5)], Object.values(size)),
+                    new Vector([size.width / 2.5, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ]
+            ]
+        },
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 6, size.height / 6], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 6), 0], Object.values(size)),
+                    new Vector([size.width, size.height / 6], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 6), size.height - (size.height / 6)], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+                [
+                    new Vector([0, size.height - (size.height / 6)], Object.values(size)),
+                    new Vector([size.width / 6, size.height], Object.values(size)),
                 ],
             ],
             spawnAreas: [
@@ -133,41 +197,45 @@
             ]
         },
         // lvl 2
-        {
-            walls: [],
-            breedingAreas: [
-                [
-                    new Vector([size.width - (size.width / 2), 0], Object.values(size)),
-                    new Vector([size.width, (size.height / 2) - 20], Object.values(size)),
-                ],
-                [
-                    new Vector([size.width - (size.width / 2), (size.height / 2) + 20], Object.values(size)),
-                    new Vector([size.width, size.height], Object.values(size)),
-                ],
-            ],
-            spawnAreas: [
-                [
-                    new Vector([0, 0], Object.values(size)),
-                    new Vector([size.width, size.height], Object.values(size)),
-                ]
-            ]
-        },
+        // {
+        //     walls: [],
+        //     breedingAreas: [
+        //         [
+        //             new Vector([size.width - (size.width / 2), 0], Object.values(size)),
+        //             new Vector([size.width, (size.height / 2) - 20], Object.values(size)),
+        //         ],
+        //         [
+        //             new Vector([size.width - (size.width / 2), (size.height / 2) + 20], Object.values(size)),
+        //             new Vector([size.width, size.height], Object.values(size)),
+        //         ],
+        //     ],
+        //     spawnAreas: [
+        //         [
+        //             new Vector([0, 0], Object.values(size)),
+        //             new Vector([size.width, size.height], Object.values(size)),
+        //         ]
+        //     ]
+        // },
         // lvl 3
-        {
-            walls: [],
-            breedingAreas: [
-                [
-                    new Vector([size.width - (size.width / 2), 0], Object.values(size)),
-                    new Vector([size.width, size.height], Object.values(size)),
-                ]
-            ],
-            spawnAreas: [
-                [
-                    new Vector([0, 0], Object.values(size)),
-                    new Vector([size.width / 2, size.height], Object.values(size)),
-                ]
-            ]
-        },
+        // {
+        //     walls: [],
+        //     breedingAreas: [
+        //         [
+        //             new Vector([size.width - (size.width / 2), 0], Object.values(size)),
+        //             new Vector([size.width, (size.height / 2) - 20], Object.values(size)),
+        //         ],
+        //         [
+        //             new Vector([size.width - (size.width / 2), (size.height / 2) + 20], Object.values(size)),
+        //             new Vector([size.width, size.height], Object.values(size)),
+        //         ],
+        //     ],
+        //     spawnAreas: [
+        //         [
+        //             new Vector([0, 0], Object.values(size)),
+        //             new Vector([size.width / 2, size.height], Object.values(size)),
+        //         ]
+        //     ]
+        // },
         // lvl 4
         {
             walls: [],
@@ -214,6 +282,12 @@
             genomeSize,
             parents,
             function (agent) {
+                if((
+                    agent.posVector[0] === agent.oldPosVector[0] && agent.posVector[0] === agent.oldPosVector[0])
+                    || (agent.oldPosVector[0] === 0 && agent.oldPosVector[1] === 0)
+                ) {
+                    return 1;
+                }
                 return Math.max(...world.breedingAreas.map(area => {
                     const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
                     const distance = [agent.posVector[0] - middle[0], agent.posVector[1] - middle[1]];
@@ -229,13 +303,13 @@
         return agent;
     }
 
-    const populationFactory = (world, size = 2000) => {
+    const populationFactory = (world, size = 1000) => {
         return new Population(
             world,
             size,
             generateAgent(
                 neuronPool(world),
-                10,
+                12,
                 world
             )
         );
@@ -244,20 +318,18 @@
     const letThereBeLight = (observers) => {
         const world = new World(
             size,
-            10000,
+            15000,
             16,
             levels,
             populationFactory
         )
         observers.forEach(obj => world.attach(obj));
-
         return world;
     }
 
     startRendering = (world, observers = []) => {
         const renderer = new WorldRenderer(world);
         observers.forEach(obs => renderer.attach(obs))
-        renderer.attach(clickObserver);
         renderer.render();
         return [ renderer, () => {
             observers.forEach(obs => renderer.detach(obs))
@@ -280,6 +352,20 @@
                 }
             }}
         ]);
+        const agentDetailsRenderer = new AgentDetailsRenderer(
+            document.getElementById('controls'),
+            world
+        );
+
+        const clickObserver = { update: (e) => {
+            if (e.type !== 'click') {
+                return
+            }
+            agentDetailsRenderer.render(e.payload.agent);
+        }}
+
+
+
         const run = () => {
             [, destroyRenderer] = startRendering(world, [clickObserver]);
             killSwitch = killEvt => {
@@ -301,6 +387,9 @@
         }
         world.attach({
             update: (e) => {
+                if(e.type !== 'armageddon'){
+                    return;
+                }
                 genMarker.textContent = ++generations;
                 killSwitch();
                 run();

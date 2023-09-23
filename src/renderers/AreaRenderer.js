@@ -31,8 +31,10 @@ class AreaRenderer {
     }
 
     clear() {
-        document.getElementById('canvas-wrapper').removeChild(this.areasContainer);
-        this.areasContainer = null;
+        if(this.areasContainer) {
+            document.getElementById('canvas-wrapper').removeChild(this.areasContainer);
+            this.areasContainer = null;
+        }
     }
 }
 

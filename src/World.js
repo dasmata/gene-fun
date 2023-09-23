@@ -10,7 +10,7 @@ const shuffle = arr => {
     return arr;
 }
 
-class World {
+class World extends Observable {
     size = {
         width: null,
         height: null
@@ -21,7 +21,6 @@ class World {
     status = 0;
     updateLoop = null;
     armageddonLoop = null;
-    observers = new Set();
     breedingAreas = [];
     spawnAreas = [];
     walls = [];
@@ -36,6 +35,7 @@ class World {
         levels,
         populationFactory,
     ) {
+        super();
         this.size = size;
 
         this.levels = levels;
@@ -135,7 +135,8 @@ class World {
             }, false);
     }
 
-    update(agent) {
+    update(e) {
+        const agent = e.payload;
         const oldVector = agent.revertPos;
 
         if (agent.alive) {
@@ -199,17 +200,5 @@ class World {
             console.log(`${interval[0][0]},${interval[0][1]}${interval[1][0]},${interval[1][1]}: `, nr);
         })
         return finds;
-    }
-
-    attach(obs) {
-        this.observers.add(obs);
-    }
-
-    detach(obs) {
-        this.observers.delete(obs)
-    }
-
-    notify(e) {
-        this.observers.forEach(obs => obs.update(e))
     }
 }

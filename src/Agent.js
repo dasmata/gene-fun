@@ -1,18 +1,12 @@
-const CONNECTION_TYPE = {
-    INPROC: 0,
-    INOUT: 1,
-    PROCOUT: 2,
-    PROCPROC: 3
-}
 
 const connectionMethods = [
     ['getInputNeurons', 'getProcessingNeurons'],
-    ['getInputNeurons', 'getOutputNeurons'],
+    // ['getInputNeurons', 'getOutputNeurons'],
     ['getProcessingNeurons', 'getOutputNeurons'],
-    ['getProcessingNeurons', 'getProcessingNeurons'],
+    // ['getProcessingNeurons', 'getProcessingNeurons'],
 ]
 
-class Agent {
+class Agent extends Observable {
     genes = [];
     neurons = {};
     posVector = null;
@@ -30,6 +24,7 @@ class Agent {
         parents = [],
         rewardFunction
     ){
+        super();
         this.posVector = posVector;
         this.oldPosVector = posVector;
         this.neurons = neuronPool;
@@ -38,7 +33,7 @@ class Agent {
         this.genes = new Genes(this.neurons, genomeSize, parents);
         this.initBrain(rewardFunction);
 
-        this.id = Symbol.for(`${this.genes.fingerprint},${this.x},${this.y}`)
+        this.id = Symbol.for(`${this.genes.fingerprint}|${Math.random().toString(36).substring(2,7)}`)
         this.color = `#${this.genes.fingerprint}`
     }
 
@@ -68,14 +63,10 @@ class Agent {
     }
 
     visualizeNeurons() {
-        const steps = []
-        const result = this.brain.reduce((acc, neuron) => {
-            console.log(neuron)
-            const tmp = this.neurons[neuron[0]].main(this, acc, neuron[1]);
-            steps.push(tmp)
-            return tmp
-        }, 0)
-        return {steps, result}
+        this.update();
+        // const results = this.brain.compute();
+        // this.movements = [];
+        // return { results }
     }
 
     move(movement) {
@@ -89,7 +80,10 @@ class Agent {
             this.posVector = this.posVector[method](vector);
         })
         this.movements = [];
-        if (!this.notify()) {
+        if (!this.notify({
+            type: 'updatePos',
+            payload: this
+        })) {
             this.posVector = this.oldPosVector;
         }
     }
@@ -98,31 +92,10 @@ class Agent {
         this.alive = false;
         this.oldPosVector = this.posVector
         this.posVector = null;
-        this.notify()
-    }
-
-    notify() {
-        /* not happy by this solution because:
-            1. it is not consistent (this can be fixed. see below)
-            2. it allows data from outside the process (not requested by the process) to change the process behaviour
-           The world object is the only one who knows if a point on the map is free or occupied by another agent.
-           If the point on the map where the agent is trying to move is occupied (not free) the movement should be prevented.
-           If the world observer returns false, the movement is aborted.
-           This is similar to the event propagation mechanism found in Vanilla JS but in this case it is not consistently implemented
-           wherever an observer pattern is used.
-         */
-        let revertSignal = true;
-        this.observers.forEach(obj => revertSignal = obj.update(this))
-        return revertSignal
-    }
-
-    attach(obj) {
-        this.observers.add(obj)
-        this.notify()
-    }
-
-    detach(obj) {
-       this.observers.delete(obj)
+        this.notify({
+            type: 'die',
+            payload: this
+        })
     }
 
     get x() {

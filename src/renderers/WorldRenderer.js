@@ -1,12 +1,12 @@
-class WorldRenderer {
+class WorldRenderer extends Observable{
     container = null;
     agentRenderer = null;
     wallRenderer = null;
     areaRenderer = null;
     world = null;
-    observers = new Set();
 
     constructor(world) {
+        super();
         this.world = world
         this.frameRenderer = this.renderMap.bind(this)
     }
@@ -20,7 +20,7 @@ class WorldRenderer {
         if (agent) {
             this.notify({
                 type: 'click',
-                payload: agent
+                payload:  { agent, world: this.world }
             })
         }
     }
@@ -34,9 +34,11 @@ class WorldRenderer {
     }
 
     destroyContainer() {
-        document.getElementById('canvas-wrapper').removeChild(this.container);
-        this.container.removeEventListener('click', this.handleClick)
-        this.container = null;
+        if(this.container){
+            document.getElementById('canvas-wrapper').removeChild(this.container);
+            this.container.removeEventListener('click', this.handleClick)
+            this.container = null;
+        }
     }
 
     render() {
@@ -94,15 +96,5 @@ class WorldRenderer {
         this.destroyContainer();
         this.areaRenderer.clear();
         this.world = null;
-    }
-
-    attach(obj) {
-        this.observers.add(obj)
-    }
-    detach(obj) {
-        this.observers.delete(obj)
-    }
-    notify(e) {
-        this.observers.forEach(obs => obs(e))
     }
 }

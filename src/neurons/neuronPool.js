@@ -24,7 +24,7 @@ const neuronPool = (() => {
         }
 
         const pool = Object.getOwnPropertySymbols(neuronMap).reduce((acc, type) => {
-            acc[type] = new GenericNeuron(world, neuronMap[type])
+            acc[type] = new GenericNeuron(world, type, neuronMap[type])
             console.log(type, acc[type].id)
             return acc
         }, {
@@ -42,7 +42,6 @@ const neuronPool = (() => {
             ],
 
             getOutputNeurons: () => [
-                Symbol.for('mr'),
                 Symbol.for('ml'),
                 Symbol.for('mr'),
                 Symbol.for('mrand'),

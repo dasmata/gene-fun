@@ -36,7 +36,7 @@ class Genes extends Array {
     }
 
     createGene() {
-        const connectionType = ~~(Math.random() * (Object.keys(this.limits).length + 1))
+        const connectionType = ~~(Math.random() * (connectionMethods.length))
         const maxWeight = (Genes.weightInterval[1] + 1);
         this.push([
             ~~(Math.random() * this.limits[connectionMethods[connectionType][0]]), // neuron
