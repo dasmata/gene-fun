@@ -30,7 +30,6 @@ class Brain extends Observable {
             weightSum += weights[idx]
             return el * weights[idx];
         }, 0);
-
         return weightSum === 0 ? 0 : weightedInputs / weightSum;
     }
 
@@ -80,28 +79,43 @@ class Brain extends Observable {
 
     evaluate(result) {
         const reward = this.rewardFunction(this.agent);
+        const rewardsToApply = [];
+        let found = false;
         this.levels[this.levels.length - 1].forEach(neuron => {
             if (!result[neuron.id]) {
                 return true;
             }
-            this.updateConnectionsWeight(neuron.id, reward);
+            let calculatedReward = null;
+            if(result[neuron.id].val){
+                found = true;
+                calculatedReward = reward;
+            } else {
+                calculatedReward = reward * -1
+            }
+
+            rewardsToApply.push([neuron.id, calculatedReward]);
         })
+
+        rewardsToApply.forEach(el => {
+            this.updateConnectionsWeight(
+                el[0],
+                found ? el[1] : el[1] * Math.round((Math.random() * 2) - 1)
+            )
+        });
+
         return this.connections;
     }
 
     updateConnectionsWeight(destNeuronId, reward, changed = []) {
         Object.keys(this.connections).forEach((source) => {
             this.connections[source].forEach((dest, idx) => {
-                let newWeight;
-                // look into this! All the weights go up/down with the same rate, in the same direction.
+                let newWeight = dest[1];
                 if(dest[0] === destNeuronId){
-                    newWeight = dest[1] + reward;
+                    newWeight += reward;
                     if (!changed.includes(source)){
                         changed.push(source)
                         this.updateConnectionsWeight(source, reward, changed);
                     }
-                } else {
-                    newWeight = dest[1] - reward
                 }
                 dest[1] = newWeight > Genes.weightInterval[1]
                     ? Genes.weightInterval[1]

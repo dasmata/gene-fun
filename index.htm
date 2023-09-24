@@ -20,6 +20,7 @@
     <script src="src/neurons/seeRightNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/seeUpNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/seeDownNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/senseRandomNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/moveRandNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/moveLeftNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/moveRightNeuron.js" type="text/javascript" ></script>
@@ -313,7 +314,7 @@
         return agent;
     }
 
-    const populationFactory = (world, size = 10) => {
+    const populationFactory = (world, size = 1000) => {
         return new Population(
             world,
             size,
