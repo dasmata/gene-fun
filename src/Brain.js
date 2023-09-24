@@ -41,7 +41,7 @@ class Brain extends Observable {
                     this.connections[source]?.forEach(connection => {
                         const [level, idx] = this.levelIndex[connection[0]] || [-1, -1];
 
-                        if (level === i){
+                        if (level === i && this.connections[lvl[idx].id]) {
                             resultsObj[lvl[idx].id] = resultsObj[lvl[idx].id] || [];
                             resultsObj[lvl[idx].id].push({val: lvl[idx].main(this.agent, lvlResults[source].val), weight: connection[1], prev: [source]});
                         }
@@ -64,7 +64,9 @@ class Brain extends Observable {
                 return lvlResults;
             }
             return lvl.reduce((acc, neuron) => {
-                acc[neuron.id] = {val: neuron.main(this.agent), weight: null, prev: null};
+                if(this.connections[neuron.id]) {
+                    acc[neuron.id] = {val: neuron.main(this.agent), weight: null, prev: null};
+                }
                 return acc;
             }, {})
         }, null);

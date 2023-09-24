@@ -6,7 +6,7 @@ const neuronPool = (() => {
         [Symbol.for('sr')]: [seeRightNeuron, VisionNeuron],
         [Symbol.for('su')]: [seeUpNeuron, VisionNeuron],
         [Symbol.for('sd')]: [seeDownNeuron, VisionNeuron],
-        [Symbol.for('srand')]: senseRandomNeuron,
+        // [Symbol.for('srand')]: senseRandomNeuron,
 
         [Symbol.for('mrand')]: moveRandNeuron,
         [Symbol.for('ml')]: moveLeftNeuron,
@@ -40,7 +40,7 @@ const neuronPool = (() => {
                 Symbol.for('sr'),
                 Symbol.for('su'),
                 Symbol.for('sd'),
-                Symbol.for('srand'),
+                // Symbol.for('srand'),
             ],
 
             getProcessingNeurons: () => [
