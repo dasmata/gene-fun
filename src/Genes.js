@@ -21,7 +21,7 @@ class Genes extends Array {
             return;
         }
         for (let i = 0; i < this.size; i++) {
-            if (~~(Math.random() * (Genes.mutationFactor + 1)) === Genes.mutationFactor) {
+            if (Math.round(Math.random() * (Genes.mutationFactor + 1)) === Genes.mutationFactor) {
                 this.createGene();
                 continue;
             }

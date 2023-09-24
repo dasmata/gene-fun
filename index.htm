@@ -16,6 +16,7 @@
     <script src="src/renderers/WallRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AreaRenderer.js" type="text/javascript" ></script>
     <script src="src/neurons/GenericNeuron.js" type="text/javascript" ></script>
+    <script src="src/neurons/VisionNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/seeLeftNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/seeRightNeuron.js" type="text/javascript" ></script>
     <script src="src/neurons/seeUpNeuron.js" type="text/javascript" ></script>
@@ -330,7 +331,7 @@
         const world = new World(
             size,
             15000,
-            16,
+            32,
             levels,
             populationFactory
         )

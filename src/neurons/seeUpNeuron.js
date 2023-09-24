@@ -1,5 +1,5 @@
 const seeUpNeuron = function (agent, input, weight) {
-     for(let i = 1; i <= 10; i++){
+     for(let i = 1; i <= 256; i++){
           for(let area in this.world.breedingAreas){
                if(
                    (agent.posVector[1] - i) - area[0][1] < agent.posVector[1] - area[0][1]

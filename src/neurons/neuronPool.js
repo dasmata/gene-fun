@@ -2,10 +2,10 @@ const neuronPool = (() => {
     const memoParams = [];
     const memoValues = [];
     const neuronMap = {
-        [Symbol.for('sl')]: seeLeftNeuron,
-        [Symbol.for('sr')]: seeRightNeuron,
-        [Symbol.for('su')]: seeUpNeuron,
-        [Symbol.for('sd')]: seeDownNeuron,
+        [Symbol.for('sl')]: [seeLeftNeuron, VisionNeuron],
+        [Symbol.for('sr')]: [seeRightNeuron, VisionNeuron],
+        [Symbol.for('su')]: [seeUpNeuron, VisionNeuron],
+        [Symbol.for('sd')]: [seeDownNeuron, VisionNeuron],
         [Symbol.for('srand')]: senseRandomNeuron,
 
         [Symbol.for('mrand')]: moveRandNeuron,
@@ -25,7 +25,13 @@ const neuronPool = (() => {
         }
 
         const pool = Object.getOwnPropertySymbols(neuronMap).reduce((acc, type) => {
-            acc[type] = new GenericNeuron(world, type, neuronMap[type])
+            let className = GenericNeuron;
+            let neuronFunc = neuronMap[type];
+            if(Array.isArray(neuronFunc)){
+                className = neuronFunc[1]
+                neuronFunc = neuronFunc[0];
+            }
+            acc[type] = new className(world, type, neuronFunc)
             console.log(type, acc[type].id)
             return acc
         }, {
