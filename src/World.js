@@ -107,10 +107,10 @@ class World extends Observable {
             newAgents.init();
         }
         this.kill();
+        this.startNewGen(newAgents);
         this.notify({
             type: 'armageddon'
         });
-        this.startNewGen(newAgents);
     }
 
     startNewGen(population){
@@ -136,6 +136,9 @@ class World extends Observable {
     }
 
     update(e) {
+        if(e.type === 'attached' && e.payload !== this){
+            return;
+        }
         const agent = e.payload;
         const oldVector = agent.revertPos;
 

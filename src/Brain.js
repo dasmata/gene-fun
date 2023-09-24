@@ -93,6 +93,7 @@ class Brain extends Observable {
         Object.keys(this.connections).forEach((source) => {
             this.connections[source].forEach((dest, idx) => {
                 let newWeight;
+                // look into this! All the weights go up/down with the same rate, in the same direction.
                 if(dest[0] === destNeuronId){
                     newWeight = dest[1] + reward;
                     if (!changed.includes(source)){
@@ -100,7 +101,7 @@ class Brain extends Observable {
                         this.updateConnectionsWeight(source, reward, changed);
                     }
                 } else {
-                    newWeight = dest[1] + reward
+                    newWeight = dest[1] - reward
                 }
                 dest[1] = newWeight > Genes.weightInterval[1]
                     ? Genes.weightInterval[1]

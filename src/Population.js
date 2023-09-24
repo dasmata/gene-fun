@@ -50,7 +50,6 @@ class Population extends Set {
     populationSize;
     world;
     neuronPool = null;
-    genomeSize = 10;
     agentGenerator = null;
 
 

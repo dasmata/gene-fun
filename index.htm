@@ -135,6 +135,8 @@
 </template>
 
 <script>
+    const controlsElement = document.getElementById('controls')
+    let agentDetailsRenderer = null;
     const size = {
         width: 256,
         height: 256
@@ -164,9 +166,17 @@
             ],
             spawnAreas: [
                 [
-                    new Vector([0, 0], Object.values(size)),
-                    new Vector([size.width, size.height], Object.values(size)),
-                ]
+                    new Vector([size.width / 2.5, 0], Object.values(size)),
+                    new Vector([size.width - (size.width / 2.5), size.height], Object.values(size)),
+                ],
+                [
+                    new Vector([0, size.height / 2.5], Object.values(size)),
+                    new Vector([size.width / 2.5, size.height - size.height / 2.5], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - size.width / 2.5, size.height / 2.5], Object.values(size)),
+                    new Vector([size.width, size.height - size.height / 2.5], Object.values(size)),
+                ],
             ]
         },
         {
@@ -286,7 +296,7 @@
                     agent.posVector[0] === agent.oldPosVector[0] && agent.posVector[0] === agent.oldPosVector[0])
                     || (agent.oldPosVector[0] === 0 && agent.oldPosVector[1] === 0)
                 ) {
-                    return 1;
+                    return (Math.random() * 2) -1;
                 }
                 return Math.max(...world.breedingAreas.map(area => {
                     const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
@@ -303,7 +313,7 @@
         return agent;
     }
 
-    const populationFactory = (world, size = 1000) => {
+    const populationFactory = (world, size = 10) => {
         return new Population(
             world,
             size,
@@ -324,6 +334,7 @@
             populationFactory
         )
         observers.forEach(obj => world.attach(obj));
+        agentDetailsRenderer = new AgentDetailsRenderer(controlsElement, world);
         return world;
     }
 
@@ -331,16 +342,18 @@
         const renderer = new WorldRenderer(world);
         observers.forEach(obs => renderer.attach(obs))
         renderer.render();
+        agentDetailsRenderer.render([...world.agents][~~(Math.random() * world.agents.size - 1)]);
         return [ renderer, () => {
             observers.forEach(obs => renderer.detach(obs))
             renderer.clear();
+            agentDetailsRenderer.clear();
         } ];
     }
 
     let killSwitch = () => {};
     let generations = 0;
     const genMarker = document.getElementById('gen')
-    const start = e => {
+    const create = e => {
         let destroyRenderer;
         const world = letThereBeLight([
             {update: e => {
@@ -352,10 +365,6 @@
                 }
             }}
         ]);
-        const agentDetailsRenderer = new AgentDetailsRenderer(
-            document.getElementById('controls'),
-            world
-        );
 
         const clickObserver = { update: (e) => {
             if (e.type !== 'click') {
@@ -377,13 +386,13 @@
                 destroyRenderer();
                 document.getElementById('play').removeEventListener('click', play)
                 document.getElementById('pause').removeEventListener('click', pause)
-                e.target.addEventListener('click', start)
+                e.target.addEventListener('click', create)
             }
             const play = () => world.play()
             const pause = () => world.pause()
             document.getElementById('play').addEventListener('click', play)
             document.getElementById('pause').addEventListener('click', pause)
-            e.target.removeEventListener('click', start)
+            e.target.removeEventListener('click', create)
         }
         world.attach({
             update: (e) => {
@@ -395,12 +404,11 @@
                 run();
             }
         })
-
         run()
     }
 
 
-    document.getElementById('start').addEventListener('click', start)
+    document.getElementById('start').addEventListener('click', create)
     document.getElementById("killSw").addEventListener('click', (e) => {
         killSwitch(e)
     })

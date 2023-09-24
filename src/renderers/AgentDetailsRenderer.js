@@ -6,6 +6,7 @@ class AgentDetailsRenderer {
     world = null;
     armageddonObserver = null;
     brainComputeObserver = null;
+    agentDieObserver = null;
     lvlTpl = null;
     clearHandler = null;
     computeClickHandler = null;
@@ -21,6 +22,15 @@ class AgentDetailsRenderer {
         this.brainComputeObserver = {
             update: this.brainComputeHandler.bind(this)
         };
+        this.agentDieObserver = {
+            update: () => this.agentDieHandler.bind(this)
+        }
+
+        this.world.attach(this.armageddonObserver);
+    }
+
+    clear() {
+        this.destroyDetails();
     }
 
     destroyDetails() {
@@ -59,16 +69,23 @@ class AgentDetailsRenderer {
             // }
             // console.log(results?.[node.id].val, results[node.id]?.val, this.resultsElCache[idx]);
 
-            this.resultsElCache[idx].textContent = '' + (results?.[node.id]?.val || 0)
+            this.resultsElCache[idx].textContent = '' + (results?.[node.id]?.val || 0);
+            this.renderNeuronConnections(brain.agent);
         })
+    }
+
+    agentDieHandler(e) {
+        if(e.type !== 'die'){
+            return;
+        }
+        e.payload.brain.attach(this.brainComputeObserver);
+        e.payload.detach(this.agentDieObserver);
     }
 
     computeClickHandleGenerator(agent) {
         return (e) => {
-            console.log(JSON.parse(JSON.stringify(agent.brain.connections)));
             const results = agent.brain.compute();
             agent.brain.evaluate(results);
-            console.log(JSON.parse(JSON.stringify(agent.brain.connections)));
         }
     }
 
@@ -77,7 +94,6 @@ class AgentDetailsRenderer {
         this.clearHandler = this.clearHandlerGenerator(agent);
         this.computeClickHandler = this.computeClickHandleGenerator(agent);
         this.currentDetails = this.agentTemplate.content.cloneNode(true).querySelector('#details-container');
-        this.world.attach(this.armageddonObserver);
 
         this.currentDetails.querySelector('h2').textContent = Symbol.keyFor(agent.id);
         this.currentDetails.querySelector('button.clear').addEventListener('click', this.clearHandler)
@@ -89,6 +105,7 @@ class AgentDetailsRenderer {
         this.renderResultsElements(agent);
 
         agent.brain.attach(this.brainComputeObserver)
+        agent.attach(this.agentDieObserver)
     }
 
     renderResultsElements(agent) {
@@ -110,19 +127,28 @@ class AgentDetailsRenderer {
     }
 
     renderNeuronConnections(agent){
-        const svgEl = document.querySelectorAll(`.level-row svg`);
+        const svgEl = this.currentDetails.querySelectorAll(`.level-row svg`);
+        svgEl?.forEach(svg => {
+            const lines = svg.querySelectorAll('line');
+            lines?.forEach(line => {
+                svg.removeChild(line);
+            })
+        })
+
+
         agent.brain.levels.forEach((lvl, idx) => {
             lvl.forEach((neuron, nr) => {
                 agent.brain.connections[neuron.id]?.forEach(conn => {
                     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
-                    const source = document.getElementById(neuron.id);
-                    const dest = document.getElementById(conn[0]);
+                    const source = this.currentDetails.querySelector(`#neuron_${neuron.id}`);
+                    const dest = this.currentDetails.querySelector(`#neuron_${conn[0]}`);
+                    const weight = Math.round(conn[1]);
                     line.setAttribute('x1', source.offsetLeft + 20);
                     line.setAttribute('y1', 0);
                     line.setAttribute('x2', dest.offsetLeft + 20);
                     line.setAttribute('y2', 40);
-                    line.setAttribute('stroke', source.style.backgroundColor);
-                    line.setAttribute('stroke-width', Math.round(conn[1]));
+                    line.setAttribute('stroke', weight > 0 ? '#00ff00' : '#ff0000');
+                    line.setAttribute('stroke-width', Math.round(4 / (5 / (weight + 5))));
                     svgEl[idx].appendChild(line);
                 });
             });
@@ -148,14 +174,15 @@ class AgentDetailsRenderer {
                 ]))
             })
             brainWrapper.appendChild(lvlTplEl);
-        })
+        });
+
     }
 
     renderNeuron(neuron, rgb){
         const neuronEl = document.createElement('div');
         neuronEl.classList.add('neuron')
         neuronEl.textContent = Symbol.keyFor(neuron.type)
-        neuronEl.setAttribute('id', neuron.id)
+        neuronEl.setAttribute('id', `neuron_${neuron.id}`)
         const brightness = Math.round(((parseInt(rgb[0]) * 299) +
             (parseInt(rgb[1]) * 587) +
             (parseInt(rgb[2]) * 114)) / 1000);
