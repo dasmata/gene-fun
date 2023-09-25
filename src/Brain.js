@@ -34,16 +34,18 @@ class Brain extends Observable {
     }
 
     compute() {
+        const totalLevels = this.levels.length - 1;
         const results = this.levels.reduce((lvlResults, lvl, i) => {
             if (lvlResults) {
                 const resultsObj = {}
                 Object.keys(lvlResults).forEach((source) => {
+                    const called = [];
                     this.connections[source]?.forEach(connection => {
                         const [level, idx] = this.levelIndex[connection[0]] || [-1, -1];
-
-                        if (level === i && this.connections[lvl[idx].id]) {
+                        if (level === i && !called.includes(lvl[idx].id) && (level === totalLevels || this.connections[lvl[idx].id])) {
                             resultsObj[lvl[idx].id] = resultsObj[lvl[idx].id] || [];
                             resultsObj[lvl[idx].id].push({val: lvl[idx].main(this.agent, lvlResults[source].val), weight: connection[1], prev: [source]});
+                            called.push(lvl[idx].id);
                         }
                     })
                 });
@@ -70,7 +72,6 @@ class Brain extends Observable {
                 return acc;
             }, {})
         }, null);
-
         this.notify({
             type: 'compute',
             payload: { results, brain: this }

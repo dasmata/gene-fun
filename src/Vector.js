@@ -27,6 +27,10 @@ class Vector extends Array {
             this.base
         )
     }
+
+    equals(vct) {
+        return vct[0] === this[0] && vct[1] === this[1];
+    }
 }
 
 Vector.wrapNormalized = (el, base) => {

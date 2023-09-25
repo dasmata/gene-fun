@@ -85,7 +85,7 @@ class World extends Observable {
     armageddon() {
         this.pause();
         const replicators = this.findAllAgents(...this.breedingAreas);
-        if(replicators.size >= this.agents.populationSize) {
+        if(replicators.size >= (this.agents.populationSize / 1)) {
             this.level++;
             if(!this.levels[this.level]){
             this.notify({
@@ -120,6 +120,54 @@ class World extends Observable {
         this.play();
     }
 
+    canReach(startVector, endVector){
+        if(startVector.equals(endVector)){
+            return true;
+        }
+
+        const deltaX = endVector[0] - startVector[0];
+        const deltaY = endVector[1] - startVector[1];
+        const lineGradient = deltaY > 0 ? Math.round((deltaX) / (deltaY)) : 0;
+
+        const limit = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+        const xSign = deltaX < 0 ? -1 : 1;
+        const ySign = deltaY < 0 ? -1 : 1;
+
+        const path = [];
+        const base = Object.values(this.size);
+        for(let i = 1; i <= limit; i++){
+            if(deltaX === 0){
+                path.push(new Vector([
+                    endVector[0],
+                    startVector[1] + (i * ySign)
+                ], base))
+                continue;
+            }
+            if(deltaY === 0){
+                path.push(new Vector([
+                    startVector[0] + (i * xSign),
+                    endVector[1]
+                ], base))
+                continue;
+            }
+            const pointDeltaX = i === limit ? deltaX : Math.round(deltaX / (limit - i));
+            const pointX = startVector[0] + pointDeltaX;
+
+            const pointDeltaY = i === limit ? deltaY : Math.round(deltaY / (limit - i));
+            const pointY = startVector[1] + pointDeltaY
+            path.push(new Vector([
+                pointX,
+                pointY
+            ], base))
+        }
+        for(const i in path){
+            if(this.isOccupied(path[i])){
+                return false;
+            }
+        }
+        return true;
+    }
+
     isOccupied(vector) {
         return this.locationIdx.has(`${vector[0]},${vector[1]}`)
             || this.locationIdx.has(`${vector[0] - 1},${vector[1]}`)
@@ -140,11 +188,11 @@ class World extends Observable {
             return;
         }
         const agent = e.payload;
-        const oldVector = agent.revertPos;
+        const oldVector = agent.oldPosVector;
 
         if (agent.alive) {
             const newVector = agent.posVector;
-            if (this.isOccupied(newVector)) {
+            if (!this.canReach(oldVector, newVector)) {
                 return false
             }
             if(oldVector && this.locationIdx.has(`${oldVector[0]},${oldVector[1]}`)){

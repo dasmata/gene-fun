@@ -64,11 +64,6 @@ class AgentDetailsRenderer {
         }
         const {brain, results} = e.payload;
         brain.levels[brain.levels.length - 1].forEach((node, idx) => {
-            // if(results?.[node.id]?.val && results?.[node.id]?.val !== 0){
-            //     return;
-            // }
-            // console.log(results?.[node.id].val, results[node.id]?.val, this.resultsElCache[idx]);
-
             this.resultsElCache[idx].textContent = '' + (results?.[node.id]?.val || 0);
             this.renderNeuronConnections(brain.agent);
         })
@@ -119,7 +114,6 @@ class AgentDetailsRenderer {
             const resultEl = document.createElement('div');
             resultEl.classList.add('result')
             resultEl.setAttribute('id', `${node.id}_result`)
-            // resultEl.textContent = '0';
             this.resultsElCache.push(resultEl);
             listEl.appendChild(resultEl)
         })
