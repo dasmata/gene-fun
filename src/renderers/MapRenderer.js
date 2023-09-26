@@ -4,11 +4,12 @@ class MapRenderer extends Observable{
     wallRenderer = null;
     areaRenderer = null;
     map = null;
+    animationFrameRequest;
 
     constructor(map) {
         super();
-        this.map = map
-        this.frameRenderer = this.renderMap.bind(this)
+        this.map = map;
+        this.frameRenderer = this.renderMap.bind(this);
     }
 
     handleClick = (e) => {
@@ -66,7 +67,7 @@ class MapRenderer extends Observable{
         ctx.clearRect(0, 0, this.map.size.width, this.map.size.height);
         this.renderPopulation(ctx);
         this.renderWalls(ctx);
-        window.requestAnimationFrame(this.frameRenderer);
+        this.animationFrameRequest = window.requestAnimationFrame(this.frameRenderer);
     }
 
     renderPopulation(ctx) {
@@ -94,8 +95,8 @@ class MapRenderer extends Observable{
     }
 
     clear() {
-        window.cancelAnimationFrame(this.frameRenderer);
-        this.destroyContainer();
+        window.cancelAnimationFrame(this.animationFrameRequest);
         this.areaRenderer.clear();
+        this.destroyContainer();
     }
 }

@@ -472,6 +472,8 @@
             this.mapRenderer.detach(this);
             this.mapRenderer.clear();
             this.detailsRenderer.clear();
+            this.mapRenderer = null;
+            this.detailsRenderer = null;
         }
 
         populationFactory = () => {
