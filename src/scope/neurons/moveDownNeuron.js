@@ -1,11 +1,10 @@
-const moveLeftNeuron = function (agent, input) {
+const moveDownNeuron = function (agent, input) {
     if (input) {
         const changeVector = new Vector(
-            [2, 0],
+            [0, 2],
             Object.values(this.world.size)
         );
-
-        agent.move([changeVector, 'subtract']);
+        agent.requestAction([changeVector, 'add']);
         return 1
     }
     return 0

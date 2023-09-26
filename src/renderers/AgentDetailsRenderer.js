@@ -4,7 +4,6 @@ class AgentDetailsRenderer {
     agentTemplate = null;
     resultsElCache = [];
     world = null;
-    armageddonObserver = null;
     brainComputeObserver = null;
     agentDieObserver = null;
     lvlTpl = null;
@@ -16,9 +15,6 @@ class AgentDetailsRenderer {
         this.world = world;
         this.agentTemplate = document.getElementById('agent');
         this.lvlTpl = document.getElementById('level');
-        this.armageddonObserver = {
-            update: this.armageddonHandler.bind(this)
-        };
         this.brainComputeObserver = {
             update: this.brainComputeHandler.bind(this)
         };
@@ -26,7 +22,6 @@ class AgentDetailsRenderer {
             update: () => this.agentDieHandler.bind(this)
         }
 
-        this.world.attach(this.armageddonObserver);
     }
 
     clear() {
@@ -40,18 +35,14 @@ class AgentDetailsRenderer {
         }
     }
 
-    armageddonHandler(e) {
-        if(e.type === 'armageddon'){
-            this.clearHandler();
-        }
-    }
-
     clearHandlerGenerator(agent) {
         return () => {
+            if(!this.currentDetails){
+                return;
+            }
             this.currentDetails.querySelector('button.clear').removeEventListener('click', this.clearHandler);
             this.currentDetails.querySelector('button.compute').removeEventListener('click', this.computeClickHandler);
             this.wrapper.removeChild(this.currentDetails);
-            this.world.detach(this.armageddonObserver);
             this.currentDetails = null;
             this.resultsElCache = [];
             agent.brain.detach(this.brainComputeObserver);
@@ -85,6 +76,9 @@ class AgentDetailsRenderer {
     }
 
     render(agent) {
+        if(!agent){
+            return;
+        }
         this.destroyDetails();
         this.clearHandler = this.clearHandlerGenerator(agent);
         this.computeClickHandler = this.computeClickHandleGenerator(agent);

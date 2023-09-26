@@ -9,29 +9,33 @@ const connectionMethods = [
 class Agent extends Observable {
     genes = [];
     neurons = {};
-    posVector = null;
-    oldPosVector = null;
+    actionValue = null;
+    oldActionValue = null;
     id = null;
     observers = new Set();
     alive = null;
     brain = null;
-    movements = [];
+    requestedActions = [];
     parents = [];
+    actionsAggregator = () => {};
+    
     constructor(
-        posVector,
+        actionValue,
         neuronPool,
         genomeSize,
         parents = [],
+        actionsAggregator,
         rewardFunction
     ){
         super();
-        this.posVector = posVector;
-        this.oldPosVector = posVector;
+        this.actionValue = actionValue;
+        this.oldActionValue = actionValue;
         this.neurons = neuronPool;
         this.parents = parents;
         this.alive = true;
         this.genes = new Genes(this.neurons, genomeSize, parents);
         this.initBrain(rewardFunction);
+        this.actionsAggregator = actionsAggregator
 
         this.id = Symbol.for(`${this.genes.fingerprint}|${Math.random().toString(36).substring(2,7)}`)
         this.color = `#${this.genes.fingerprint}`
@@ -51,7 +55,7 @@ class Agent extends Observable {
     update() {
         if (this.alive){
             const result = this.brain.compute();
-            this.updatePos();
+            this.updateActionValue();
             this.updateGenesFromConnections(this.brain.evaluate(result))
         }
     }
@@ -64,34 +68,28 @@ class Agent extends Observable {
 
     visualizeNeurons() {
         this.update();
-        // const results = this.brain.compute();
-        // this.movements = [];
-        // return { results }
     }
 
-    move(movement) {
-        this.movements.push(movement)
+    requestAction(action) {
+        this.requestedActions.push(action)
     }
 
-    updatePos() {
-        this.oldPosVector = this.posVector
-        this.movements.forEach(params => {
-            const [vector, method] = params
-            this.posVector = this.posVector[method](vector);
-        })
-        this.movements = [];
+    updateActionValue() {
+        this.oldActionValue = this.actionValue;
+        this.actionValue = this.actionsAggregator(this.requestedActions, this.actionValue);
+        this.requestedActions = [];
         if (!this.notify({
-            type: 'updatePos',
+            type: 'updateActionValue',
             payload: this
         })) {
-            this.posVector = this.oldPosVector;
+            this.actionValue = this.oldActionValue;
         }
     }
 
     die(){
         this.alive = false;
-        this.oldPosVector = this.posVector
-        this.posVector = null;
+        this.oldActionValue = this.actionValue
+        this.actionValue = null;
         this.notify({
             type: 'die',
             payload: this
@@ -99,11 +97,9 @@ class Agent extends Observable {
     }
 
     get x() {
-        return this.posVector[0]
+        return this.actionValue[0]
     }
     get y() {
-        return this.posVector[1]
+        return this.actionValue[1]
     }
 }
-
-Agent.size = 2;
