@@ -77,6 +77,7 @@ class Supervisor extends Observable {
     }
 
     kill() {
+        this.pause();
         this.agents.forEach(el => el.die());
         this.status = 0
     }

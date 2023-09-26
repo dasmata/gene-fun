@@ -387,6 +387,7 @@
             )
             const population = this.populationFactory();
             population.init();
+            this.map.attach(this);
             this.map.setPopulation(population);
         }
 
@@ -432,6 +433,14 @@
                     break;
                 case 'agentClick':
                     this.agentClickHandler(e);
+                    break;
+                case 'levelUp':
+                    console.log('I\'m a big boy now!!! Age ', this.map.level);
+                    break;
+                case 'taskComplete':
+                    this.pauseClickHandler();
+                    alert('Great Success!!!')
+                    break;
             }
         }
 
@@ -441,6 +450,13 @@
             const newAgents = this.populationFactory();
             if(replicators.size >= (this.map.population.populationSize / 1)) {
                 this.map.nextLevel();
+                if(this.supervisor.status === 0){
+                    this.map.population.forEach(el => {
+                        el.actionValue = el.oldActionValue;
+                        el.alive = true;
+                    })
+                    return;
+                }
             } else {
                 this.genMarkerElement.textContent = ++this.generationsNr;
             }
