@@ -33,8 +33,10 @@ class Supervisor extends Observable {
         const duration = end.startTime - start.startTime;
         if(duration > this.actionInterval){
             this.actionInterval++;
-            this.generationLifeTime = duration * this.actionsNr;
+        } else if (duration * 0.2 < this.actionInterval) {
+            this.actionInterval--;
         }
+        this.generationLifeTime = duration * this.actionsNr;
         if (this.status && !this.updateLoop ) {
             this.updateLoop = setInterval(this.runner, this.actionInterval)
         }
