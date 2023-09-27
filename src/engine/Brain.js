@@ -114,7 +114,7 @@ class Brain extends Observable {
             this.connections[source].forEach((dest, idx) => {
                 let newWeight = dest[1];
                 if(dest[0] === destNeuronId){
-                    newWeight += reward;
+                    newWeight = newWeight + (reward * (dest[1] / Genes.weightInterval[dest[1] < 0 ? 0 : 1]));
                     if (!changed.includes(source)){
                         changed.push(source)
                         this.updateConnectionsWeight(source, reward, changed);

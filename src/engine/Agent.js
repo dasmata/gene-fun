@@ -38,7 +38,6 @@ class Agent extends Observable {
         this.actionsAggregator = actionsAggregator
 
         this.id = Symbol.for(`${this.genes.fingerprint}|${Math.random().toString(36).substring(2,7)}`)
-        this.color = `#${this.genes.fingerprint}`
     }
 
     initBrain(rewardFunction) {
