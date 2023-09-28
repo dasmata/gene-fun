@@ -130,13 +130,13 @@ class AgentDetailsRenderer {
                     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
                     const source = this.currentDetails.querySelector(`#neuron_${neuron.id}`);
                     const dest = this.currentDetails.querySelector(`#neuron_${conn[0]}`);
-                    const weight = Math.round(conn[1]);
+                    const weight = Math.round(conn[1]) + 2;
                     line.setAttribute('x1', source.offsetLeft + 20);
                     line.setAttribute('y1', 0);
                     line.setAttribute('x2', dest.offsetLeft + 20);
                     line.setAttribute('y2', 40);
-                    line.setAttribute('stroke', weight > 0 ? '#00ff00' : '#ff0000');
-                    line.setAttribute('stroke-width', Math.round(4 / (5 / (weight + 5))));
+                    line.setAttribute('stroke', weight > 4 ? '#00ff00' : '#ff0000');
+                    line.setAttribute('stroke-width', weight / 2);
                     svgEl[idx].appendChild(line);
                 });
             });

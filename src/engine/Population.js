@@ -36,11 +36,11 @@ class Population extends Set {
     }
 
     replicate(size, newPopulation) {
-        const avgOffsprings = size / (this.size / 1.7);
+        const avgOffsprings = Math.round(size / (this.size / 1.7));
         console.log(this.size, avgOffsprings, size)
         const agents = shuffle(Array.from(this));
         for(let i = 0; i < this.size; i += 2) {
-            const familySize = Math.round(Math.random() * (avgOffsprings + 2))
+            const familySize = Math.round((Math.random() * 2) + avgOffsprings);
             for (let j = 0; j < familySize; j++) {
                 const parents = [(agents?.[i] || agents[i-1]), (agents?.[i+1] || agents[i-2])]
                 const agent = this.generateAgent(parents.map(el => (el || this.generateAgent()).genes));

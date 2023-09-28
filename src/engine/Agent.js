@@ -46,7 +46,8 @@ class Agent extends Observable {
             this.brain.addConnection(
                 this.neurons[this.neurons[connectionMethods[gene[2]][0]]()[gene[0]]].id,
                 this.neurons[this.neurons[connectionMethods[gene[2]][1]]()[gene[1]]].id,
-                ((this.genes[idx - 1]?.[3] || 1) + (this.genes[idx - 1]?.[4] || 1)) / 2
+                ((this.genes[idx - 1]?.[3] || 1) + (this.genes[idx - 1]?.[4] || 1)) / 2,
+                idx
             )
         })
     }
@@ -61,7 +62,11 @@ class Agent extends Observable {
 
     updateGenesFromConnections(connections) {
         Object.keys(connections).forEach((key, idx) => {
-            this.genes[idx][5] = connections[key][1];
+            connections[key].forEach(dest => {
+                const val = dest[1] * 2;
+                this.genes[dest[2]][3] = val;
+                this.genes[dest[2]][4] = val;
+            })
         })
     }
 

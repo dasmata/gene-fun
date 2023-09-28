@@ -21,11 +21,17 @@ class Genes extends Array {
             return;
         }
         for (let i = 0; i < this.size; i++) {
-            if (Math.round(Math.random() * (Genes.mutationFactor + 1)) === Genes.mutationFactor) {
+            if (Genes.mutationFactor > 0 && Math.round(Math.random() * (Genes.mutationFactor + 1)) === Genes.mutationFactor) {
                 this.createGene();
                 continue;
             }
-            this.push(this.parents[~~(Math.random() * 2)][i])
+            if(!this.parents[0][i] || !this.parents[1][i]){
+                this.createGene();
+                continue;
+            }
+            // const parent1Nr = (this.parents[0][i][3] + this.parents[0][i][4]) / 2;
+            // const parent2Nr = (this.parents[1][i][3] + this.parents[1][i][4]) / 2;
+            this.push(this.parents[Math.round(Math.random())][i])
         }
     }
 
@@ -42,23 +48,28 @@ class Genes extends Array {
             ~~(Math.random() * this.limits[connectionMethods[connectionType][0]]), // neuron
             ~~(Math.random() * this.limits[connectionMethods[connectionType][1]]), // neuron
             connectionType, // connection type
-            ~~(Math.random() * maxWeight * (Math.round(Math.random()) ? 1 : -1)), // neuron 1 weight
-            ~~(Math.random() * maxWeight * (Math.round(Math.random()) ? 1 : -1)) // neuron 2 weight
+            ~~(Math.random() * maxWeight), // neuron 1 weight
+            ~~(Math.random() * maxWeight) // neuron 2 weight
         ])
     }
 
     setFingerprint() {
-        this.fingerprint = [...this].map((gene) => {
-             return [gene[0] * gene[3], gene[1] * gene[4], ~~(255 / gene[2])];
-        }).reduce((acc, values) => {
-            return acc.map((el, idx) => el + values[idx])
-        }, [0, 0, 0]).reduce((acc, num) => {
-            const tmp = (num / 255 * 200);
-            const val = tmp < 0 ? 255 + num : num;
+        const geneHexa = [...this].map((gene) => {
+            return [
+                gene[0] * (255 / this.limits[connectionMethods[gene[2]][0]]),
+                gene[1] * (255 / this.limits[connectionMethods[gene[2]][1]]),
+                (255 / 18) * (gene[3] + gene[4])
+            ];
+        });
+        const genesSums = geneHexa.reduce((acc, values) => {
+            return acc.map((el, idx) => el + Math.round(values[idx]))
+        }, [0, 0, 0])
+
+        this.fingerprint = genesSums.reduce((acc, val) => {
             return acc + (val > 255 ? val % 255 : val).toString(16).padStart(2, '0');
-        }, '')
+        }, '');
     }
 }
 
 Genes.mutationFactor = 1000;
-Genes.weightInterval = [-4, 4];
+Genes.weightInterval = [0, 8];
