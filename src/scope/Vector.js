@@ -1,3 +1,40 @@
+
+const gpu = new GPU.GPU();
+
+gpu.addFunction(function normalizeNoWrapGpu(nr, base) {
+    let val = Math.abs(nr);
+    if (nr < 0) {
+        val = base - val
+    }
+    if (val > base) {
+        val = Math.abs(val % base)
+    }
+    return val;
+})
+
+const gpuAddArray = gpu.createKernel(function(a, b, base){
+    const result = [0, 0];
+    for(let i = 0; i < 2; i++){
+        result[i] = normalizeNoWrapGpu(
+            a[this.thread.x][i] + b[this.thread.x][i],
+            base[i]
+        );
+    }
+    return result;
+}).setOutput([1]);
+
+const gpuSubtractArray = gpu.createKernel(function(a, b, base){
+    const result = [0, 0];
+    for(let i = 0; i < 2; i++){
+        result[i] = normalizeNoWrapGpu(
+            a[this.thread.x][i] - b[this.thread.x][i],
+            base[i]
+        );
+    }
+    return result;
+}).setOutput([1]);
+
+
 class Vector extends Array {
 
     constructor(values = [], base = []) {
@@ -12,6 +49,11 @@ class Vector extends Array {
         if(vct.length !== this.length){
             throw new Error('Vector size mismatch')
         }
+        // return new Vector(gpuAddArray(
+        //     this,
+        //     vct,
+        //     this.base
+        // )[0], this.base)
         return new Vector(
             [...this].map((el, idx) => this.normalizeValue(el + vct[idx], this.base[idx])),
             this.base
@@ -22,6 +64,11 @@ class Vector extends Array {
         if(vct.length !== this.length){
             throw new Error('Vector size mismatch')
         }
+        // return new Vector(gpuSubtractArray(
+        //     this,
+        //     vct,
+        //     this.base
+        // )[0], this.base)
         return new Vector(
             [...this].map((el, idx) => this.normalizeValue(el - vct[idx], this.base[idx])),
             this.base
