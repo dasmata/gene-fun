@@ -6,25 +6,19 @@
     <script src="https://unpkg.com/gpu.js@latest/dist/gpu-browser.min.js" type="text/javascript"></script>
 
     <script src="src/engine/Observable.js" type="text/javascript" ></script>
-    <script src="src/engine/Agent.js" type="text/javascript" ></script>
-    <script src="src/engine/Genes.js" type="text/javascript" ></script>
-    <script src="src/engine/Brain.js" type="text/javascript" ></script>
-    <script src="src/engine/Population.js" type="text/javascript" ></script>
-    <script src="src/engine/Supervisor.js" type="text/javascript" ></script>
-    <script src="src/engine/GenericNeuron.js" type="text/javascript" ></script>
 
     <script src="src/renderers/MapRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AgentRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AgentDetailsRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/WallRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AreaRenderer.js" type="text/javascript" ></script>
+    <script src="src/renderers/StatsRenderer.js" type="text/javascript" ></script>
 
     <script src="src/scope/SpawningBounds.js" type="text/javascript" ></script>
     <script src="src/scope/Vector.js" type="text/javascript" ></script>
     <script src="src/scope/Map.js" type="text/javascript" ></script>
 
 
-    <script src="src/scope/neurons/VisionNeuron.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/seeLeftNeuron.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/seeRightNeuron.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/seeUpNeuron.js" type="text/javascript" ></script>
@@ -145,6 +139,15 @@
         </div>
         <svg width="390" height="40" id="connections"></svg>
     </div>
+</template>
+
+<template id="stats">
+    <section class="stats">
+        <div class="stats-row">
+            <div class="stats-label">Label</div>
+            <div class="stats-value">value</div>
+        </div>
+    </section>
 </template>
 
 <script>
@@ -349,38 +352,19 @@
         }
     ]
 
-    const generateAgent = (neuronPool, genomeSize, world) => (parents = []) => {
-        const agent = new Agent(
-            new Vector([0,0], [world.size.width, world.size.height]),
-            neuronPool,
-            genomeSize,
-            parents,
-            function(movements, currentActionValue) {
-                return movements.reduce((actionValue, params) => {
-                    const [vector, method] = params
-                    return actionValue[method](vector);
-                }, currentActionValue);
-            },
-            function (agent) {
-                if((
-                    agent.actionValue[0] === agent.oldActionValue[0] && agent.actionValue[0] === agent.oldActionValue[0])
-                ) {
-                    return Math.round(Math.random());
-                }
-                return Math.max(...world.breedingAreas.map(area => {
-                    const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
-                    const distance = [agent.actionValue[0] - middle[0], agent.actionValue[1] - middle[1]];
-                    const oldDistance = [agent.oldActionValue[0] - middle[0], agent.oldActionValue[1] - middle[1]];
-
-                    const diffX = distance[0] - oldDistance[0];
-                    const diffY = distance[1] - oldDistance[1];
-                    return (diffX < 0 ? -1 : (diffX > 0 ? 1 : 0)) + (diffY < 0 ? -1 : (diffY > 0 ? 1 : 0));
-                }))
-            }
-        );
-        agent.attach(world);
-        return agent;
-    }
+    const lastLevelNeurons = {
+        mr : () => [Map.agentSize, 0],
+        ml: () => [-1 * Map.agentSize, 0],
+        mu: () => [0, -1 * Map.agentSize],
+        md: () => [0, Map.agentSize],
+        mrand: () => [
+            Math.round(Math.random()) * Map.agentSize * (Math.round(Math.random()) === 0 ? -1 : 1),
+            Math.round(Math.random()) * Map.agentSize * (Math.round(Math.random()) === 0 ? -1 : 1)
+        ]
+    };
+    const STATUS_PAUSED = 0;
+    const STATUS_RUNNING = 1;
+    const STATUS_INITIALIZED = 2;
 
 
     class Page {
@@ -389,51 +373,46 @@
         pauseBtn;
         playBtn;
         controlsElement;
-        genMarkerElement;
-        generationsNr;
 
         actions = 1250;
-        timePerAction = 22;
         populationSize = 1000;
         geneNumber = 12;
 
         map;
-        supervisor;
 
         mapRenderer;
         detailsRenderer;
+        statsRenderer;
 
-        consecutiveGenerationsEvolving = 0;
-        oldResults = [];
-        resultsCursor = 0;
+        neuronTypes;
+        population;
+        initialMapData;
+        status = STATUS_INITIALIZED;
+        armageddonStats = {};
 
         constructor(){
             this.createBtn = document.getElementById('start');
             this.killBtn = document.getElementById('killSw');
             this.pauseBtn = document.getElementById('pause');
             this.playBtn = document.getElementById('play');
-            this.genMarkerElement = document.getElementById('gen');
             this.controlsElement = document.getElementById('controls')
 
-            this.lifeExpectancy = this.actions * this.timePerAction;
-            this.generationsNr = 0;
 
             this.createClickHandler = this.createClickHandler.bind(this);
             this.playClickHandler = this.playClickHandler.bind(this);
             this.pauseClickHandler = this.pauseClickHandler.bind(this);
             this.killClickHandler = this.killClickHandler.bind(this);
+            this.update = this.update.bind(this);
 
             this.createBtn.addEventListener('click', this.createClickHandler)
-        }
 
-        createSupervisor(){
-            this.supervisor = new Supervisor(
-                this.lifeExpectancy,
-                this.timePerAction,
-                this.actions,
-                this.map.population
-            )
-            this.supervisor.attach(this);
+
+
+            this.neuronTypes = {};
+            this.population = [];
+
+
+
         }
 
         createMap() {
@@ -441,142 +420,212 @@
                 size,
                 levels
             )
-            const population = this.populationFactory();
-            population.init();
             this.map.attach(this);
-            this.map.setPopulation(population);
+            this.initialMapData = this.map.toJSON();
         }
 
-        killClickHandler(killEvt){
-            if (killEvt) {
-                this.supervisor.kill();
-                this.generationsNr = 0;
-                this.genMarkerElement.textContent = this.generationsNr;
-            }
+        killClickHandler(){
+            this.status = STATUS_PAUSED;
             this.stopRendering();
+            this.detailsRenderer = null;
+            this.mapRenderer = null;
+            this.statsRenderer = null;
+            this.neuronTypes = {};
+            this.population = [];
+            this.map = null;
             this.playBtn.removeEventListener('click', this.playClickHandler);
             this.pauseBtn.removeEventListener('click', this.pauseClickHandler);
             this.createBtn.addEventListener('click', this.createClickHandler);
         }
 
         playClickHandler(){
-            this.supervisor.play()
+            this.status = STATUS_RUNNING;
+            this.updateWorker.postMessage({
+                type: 'setAggregatedValues',
+                payload: this.map.toJSON()
+            })
             this.createBtn.removeEventListener('click', this.createClickHandler);
         }
 
         pauseClickHandler(){
-            this.supervisor.pause();
+            this.status = STATUS_PAUSED;
+            this.playBtn.removeEventListener('click', this.playClickHandler);
+            this.playBtn.addEventListener('click', this.playClickHandler);
         }
 
         createClickHandler(){
             this.createMap();
-            this.createSupervisor();
-            this.playBtn.addEventListener('click', this.playClickHandler);
+            this.status = STATUS_INITIALIZED;
+            this.updateWorker = new Worker('src/engine/UpdateWorker.js', {name: 'updateWorker'});
+            this.updateWorker.addEventListener('message', this.update);
+            this.updateWorker.postMessage({
+                type: 'init',
+                payload: {
+                    dependencies: [
+                        '../scope/neurons/ScopeNeuron.js',
+                        '../scope/neurons/VisionNeuron.js',
+                    ],
+                    neurons: neuronPool(this.map),
+                    populationSize: this.populationSize,
+                    geneNumber: this.geneNumber,
+                    minActions: this.actions,
+                }
+            });
+
             this.pauseBtn.addEventListener('click', this.pauseClickHandler);
             this.killBtn.addEventListener('click', this.killClickHandler);
             this.createBtn.removeEventListener('click', this.createClickHandler);
-            this.startRendering();
+        }
+
+        handleWorkerReady(){
+            this.map.setPopulation(this.population);
+            this.statsRenderer?.render({
+                ...this.armageddonStats,
+                population: this.population.length
+            });
+            this.map.placeAgentsOnMap();
+            if (this.status === STATUS_RUNNING) {
+                this.playBtn.removeEventListener('click', this.playClickHandler);
+                this.playClickHandler();
+                this.renderAgentDetails();
+                return;
+            }
+            if(this.status === STATUS_INITIALIZED){
+                this.startRendering();
+            }
+            this.playBtn.addEventListener('click', this.playClickHandler);
         }
 
         agentClickHandler(e){
             this.detailsRenderer.render(e.payload.agent);
         }
 
+        handleNeuronCreated(neuron) {
+            this.neuronTypes[neuron.id] = {...neuron};
+            this.updateWorker.postMessage({
+                type: 'rpc',
+                payload: {
+                    ctxPath: ['neuronPool', neuron.type],
+                    method: 'setMap',
+                    params: [this.initialMapData]
+                }
+            });
+        }
+
+        handleComputed(computeResults){
+            if(this.selectedAgent.id){
+                this.detailsRenderer.update(computeResults[this.selectedAgent.id])
+            }
+            const results = Object.values(computeResults).map(entry => {
+                const actionResult = this.actionAggregator(entry.results, entry.agent, this.neuronTypes);
+                actionResult.reward = this.getActionReward(actionResult);
+                return actionResult;
+            })
+            this.map.setPopulation(results);
+            if(this.status === STATUS_RUNNING){
+                this.updateWorker.postMessage({
+                    type: 'setAggregatedValues',
+                    payload: this.map.toJSON()
+                })
+            }
+        }
+
         update(e){
-            switch(e.type){
+            switch(e.data?.type || e.type){
+                case 'neuronCreated':
+                    this.handleNeuronCreated(e.data.payload);
+                    break;
+                case 'agentCreated':
+                    this.population.push(e.data.payload);
+                    break;
+                case 'ready':
+                    this.handleWorkerReady();
+                    break;
+                case 'computed':
+                    this.handleComputed(e.data.payload);
+                    break;
                 case 'armageddon':
-                    this.handleArmageddon(e);
-                    break;
-                case 'agentClick':
-                    this.agentClickHandler(e);
-                    break;
-                case 'levelUp':
-                    console.log('I\'m a big boy now!!! Age ', this.map.level);
-                    this.handleArmageddon(e);
-                    break;
-                case 'taskComplete':
-                    this.pauseClickHandler();
-                    alert('Great Success!!!')
+                    this.handleArmageddon()
                     break;
             }
         }
 
-        handleArmageddon(e){
-            const evolveThreshold = 100;
+        handleArmageddon(){
+            this.population = [];
             const [replicators, agentsPerArea] = this.map.findAllAgents();
-            if(replicators.size === 0 && this.geneNumber < 5){
-                console.log('Evolving:', 'no results');
-                this.geneNumber++;
-            } else if((replicators.size <= Math.max(...this.oldResults) || replicators.size === 0) && this.geneNumber < 15){
-                this.consecutiveGenerationsEvolving++;
-                console.log('GTE:', evolveThreshold - this.consecutiveGenerationsEvolving, replicators.size, Math.max(...this.oldResults));
-            } else {
-                this.consecutiveGenerationsEvolving = 0
-            }
-            this.oldResults[this.resultsCursor++ % evolveThreshold]  = replicators.size;
-            if (this.consecutiveGenerationsEvolving >= evolveThreshold && e.type === 'levelUp'){
-                console.log('Evolving:', 'stagnation');
-                this.geneNumber++;
-                this.consecutiveGenerationsEvolving = 0
-                this.oldResults = [];
-                this.resultsCursor = 0;
-            }
-            console.log(agentsPerArea);
-            const newAgents = this.populationFactory();
-            if(e.type !== 'levelUp' && replicators.size >= (this.map.population.populationSize / 1)) {
-                this.map.nextLevel();
-                if(this.supervisor.status === 0){
-                    this.map.population.forEach(el => {
-                        el.actionValue = el.oldActionValue;
-                        el.alive = true;
-                    })
-                    return;
-                }
-            } else {
-                this.genMarkerElement.textContent = ++this.generationsNr;
-            }
-            if (replicators.size > 0) {
-                replicators.replicate(this.map.population.populationSize, newAgents);
-            } else {
-                newAgents.init();
-            }
-            this.supervisor.setAgents(newAgents)
-            this.map.setPopulation(newAgents);
-            this.stopRendering();
-            this.startRendering();
-            this.supervisor.play();
+            this.armageddonStats = {
+                agentsPerArea,
+                replicatorsNr: replicators.length
+            };
+            this.updateWorker.postMessage({
+                type: 'createDescendants',
+                payload: replicators
+            })
         }
 
         startRendering = () => {
-            this.detailsRenderer = this.detailsRenderer || new AgentDetailsRenderer(this.controlsElement, this.supervisor);
+            this.detailsRenderer = this.detailsRenderer || new AgentDetailsRenderer(this.controlsElement, this.map, this.neuronTypes);
             this.mapRenderer = this.mapRenderer || new MapRenderer(this.map);
-
-            this.map.placeAgentsOnMap();
+            this.statsRenderer = this.statsRenderer || new StatsRenderer();
 
             this.mapRenderer.attach(this);
             this.mapRenderer.render();
+            this.statsRenderer.render(null);
+            this.renderAgentDetails();
+        }
 
-            this.detailsRenderer.render([...this.map.population][~~(Math.random() * this.map.population.size - 1)]);
+        renderAgentDetails(agent){
+            this.selectedAgent = agent || [...this.map.population][~~(Math.random() * this.map.population.size - 1)];
+            this.detailsRenderer.render(this.selectedAgent);
         }
 
         stopRendering(){
             this.mapRenderer.detach(this);
             this.mapRenderer.clear();
             this.detailsRenderer.clear();
+            this.statsRenderer.clear();
             this.mapRenderer = null;
             this.detailsRenderer = null;
         }
 
-        populationFactory = () => {
-            return new Population(
-                this.map,
-                this.populationSize,
-                generateAgent(
-                    neuronPool(this.map),
-                    this.geneNumber,
-                    this.map
-                )
-            );
+        actionAggregator(results, currentActionValue, neuronTypes) {
+            const delta = [0, 0];
+            Object.keys(results).forEach(id => {
+                if (Object.keys(lastLevelNeurons).includes(neuronTypes[id].type)) {
+                    lastLevelNeurons[neuronTypes[id].type]().forEach((el, idx) => {
+                        delta[idx] += el;
+                    });
+                }
+            })
+            const currentActionVector = new Vector(currentActionValue.actionValue, Object.values(this.map.size).map(el => el - Map.agentSize));
+            const deltaVectorX = new Vector([Math.abs(delta[0]), 0], Object.values(this.map.size));
+            const deltaVectorY = new Vector([0, Math.abs(delta[1])], Object.values(this.map.size));
+            let actionValue = currentActionVector[delta[0] < 0 ? 'subtract' : 'add'](deltaVectorX);
+            actionValue = actionValue[delta[1] < 0 ? 'subtract' : 'add'](deltaVectorY);
+            if(this.map.canReach(currentActionVector, actionValue)){
+                currentActionValue.oldActionValue = currentActionValue.actionValue;
+                currentActionValue.actionValue = actionValue.toJSON();
+            }
+
+            return currentActionValue;
+
+        }
+
+        getActionReward(agent) {
+            if((
+                agent.actionValue[0] === agent.oldActionValue[0] && agent.actionValue[0] === agent.oldActionValue[0])
+            ) {
+                return Math.round(Math.random());
+            }
+            return Math.max(...this.map.breedingAreas.map(area => {
+                const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
+                const distance = [agent.actionValue[0] - middle[0], agent.actionValue[1] - middle[1]];
+                const oldDistance = [agent.oldActionValue[0] - middle[0], agent.oldActionValue[1] - middle[1]];
+
+                const diffX = distance[0] - oldDistance[0];
+                const diffY = distance[1] - oldDistance[1];
+                return (diffX < 0 ? -1 : (diffX > 0 ? 1 : 0)) + (diffY < 0 ? -1 : (diffY > 0 ? 1 : 0));
+            }))
         }
     }
 

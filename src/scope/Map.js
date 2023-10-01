@@ -15,13 +15,17 @@ class Map extends Observable{
         super();
         this.size = size;
         this.levels = levels;
-        this.locationIdx = new Set();
         this.level = level;
+        this.population = [];
         this.initLevel();
     }
 
     setPopulation(population) {
         this.population = population;
+        this.locationIdx = new Set();
+        this.population.forEach(agent => {
+            this.locationIdx.add(`${agent.actionValue?.[0]},${agent.actionValue?.[1]}`);
+        })
     }
 
     initLevel() {
@@ -53,14 +57,15 @@ class Map extends Observable{
     }
 
     placeAgentsOnMap () {
-        const boundsObj = new SpawningBounds(this.getSpawningAreasData(), this.population.size)
-
+        const boundsObj = new SpawningBounds(this.getSpawningAreasData(), this.population.length)
         this.population.forEach((agent) => {
             agent.actionValue = Map.getAgentCoords(
                 boundsObj.getBounds(),
                 Object.values(this.size).map(el => el - Map.agentSize),
                 data => !this.isOccupied(data)
             );
+            agent.oldActionValue = agent.actionValue;
+            this.locationIdx.add(`${agent.actionValue[0]},${agent.actionValue[1]}`);
             boundsObj.adjustLayer();
             boundsObj.adjustArea();
         });
@@ -88,7 +93,6 @@ class Map extends Observable{
 
         const deltaX = endVector[0] - startVector[0];
         const deltaY = endVector[1] - startVector[1];
-        const lineGradient = deltaY > 0 ? Math.round((deltaX) / (deltaY)) : 0;
 
         const limit = Math.max(Math.abs(deltaX), Math.abs(deltaY));
         const xSign = deltaX < 0 ? -1 : 1;
@@ -133,7 +137,7 @@ class Map extends Observable{
         const intervals = searchAreas || this.breedingAreas;
         const shuffledIntervals = shuffle(intervals);
         const agentsPerArea = [];
-        const foundAgents = this.population.find((agent) => {
+        const foundAgents = this.population.filter((agent) => {
             for(let i in shuffledIntervals){
                 const interval = shuffledIntervals[i];
                 const startVector = interval[0];
@@ -186,7 +190,6 @@ class Map extends Observable{
         }
         const agent = e.payload;
         const oldActionValue = agent.oldActionValue;
-
         if (agent.alive) {
             const newActionValue = agent.actionValue;
             if (!this.canReach(oldActionValue, newActionValue)) {
@@ -202,6 +205,22 @@ class Map extends Observable{
             this.locationIdx.delete(`${oldActionValue[0]},${oldActionValue[1]}`);
         }
         agent.detach(this)
+    }
+
+    toJSON(){
+        return {
+            breedingAreas: JSON.parse(JSON.stringify(this.breedingAreas)),
+            walls: JSON.parse(JSON.stringify(this.walls)),
+            spawnAreas: JSON.parse(JSON.stringify(this.spawnAreas)),
+            agents: this.population.reduce((acc, agent) => {
+                acc[agent.id] = {
+                    ...agent,
+                    actionValue: agent.actionValue.toJSON?.() || agent.actionValue,
+                    oldActionValue: agent.oldActionValue.toJSON?.() || agent.oldActionValue,
+                }
+                return acc;
+            }, {}),
+        };
     }
 }
 
