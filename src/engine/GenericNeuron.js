@@ -15,3 +15,4 @@ class GenericNeuron {
         return this.process(agent, (input < 0 || !input) ? 0 : 1)
     }
 }
+( self || {} ).GenericNeuron = GenericNeuron;

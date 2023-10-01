@@ -1,27 +1,29 @@
-class AgentDetailsRenderer {
+class AgentDetailsRenderer extends Observable{
     currentDetails = null
     wrapper = null;
     agentTemplate = null;
     resultsElCache = [];
-    world = null;
+    map = null;
     brainComputeObserver = null;
     agentDieObserver = null;
     lvlTpl = null;
     clearHandler = null;
     computeClickHandler = null;
+    neurons = {};
+    neuronConnections = {};
 
-    constructor(wrapper, world) {
+    constructor(wrapper, map, neurons) {
+        super();
         this.wrapper = wrapper;
-        this.world = world;
+        this.map = map;
+        this.neurons = neurons;
+        this.neuronLevels = Object.values(this.neurons).reduce((levels, neuron, idx) => {
+            levels[neuron.level] = levels[neuron.level] || [];
+            levels[neuron.level].push({ type: neuron.type, id: neuron.id});
+            return levels;
+        }, []);
         this.agentTemplate = document.getElementById('agent');
         this.lvlTpl = document.getElementById('level');
-        this.brainComputeObserver = {
-            update: this.brainComputeHandler.bind(this)
-        };
-        this.agentDieObserver = {
-            update: () => this.agentDieHandler.bind(this)
-        }
-
     }
 
     clear() {
@@ -49,62 +51,67 @@ class AgentDetailsRenderer {
         }
     }
 
-    brainComputeHandler(e){
-        if(e.type !== 'compute') {
+    update(updateData){
+        if(!updateData){
             return;
         }
-        const {brain, results} = e.payload;
-        brain.levels[brain.levels.length - 1].forEach((node, idx) => {
-            this.resultsElCache[idx].textContent = '' + (results?.[node.id]?.val || 0);
-            this.renderNeuronConnections(brain.agent);
+        const {results, agent} = updateData;
+        this.generateNeuronConnectionsFromGenes(agent.genes.data);
+        this.neuronLevels.slice(-1)[0].forEach((node, idx) => {
+            this.resultsElCache[idx].textContent = '' + (results?.[node.id]?.val || 0)
         })
-    }
-
-    agentDieHandler(e) {
-        if(e.type !== 'die'){
-            return;
-        }
-        e.payload.brain.attach(this.brainComputeObserver);
-        e.payload.detach(this.agentDieObserver);
+        this.renderNeuronConnections()
     }
 
     computeClickHandleGenerator(agent) {
         return (e) => {
-            const results = agent.brain.compute();
-            agent.brain.evaluate(results);
+            this.notify({
+                type: 'computeRequest',
+                payload: agent
+            });
         }
+    }
+
+    generateNeuronConnectionsFromGenes(genes) {
+        this.neuronConnections = genes.reduce((connections, gene) => {
+            const startLevel = gene[2];
+            const arr = connections[this.neuronLevels[startLevel][gene[0]].id] || []
+            arr.push([this.neuronLevels[startLevel + 1][gene[1]].id, (gene[3] + gene[4]) / 2]);
+            connections[this.neuronLevels[startLevel][gene[0]].id] = arr;
+            return connections;
+        }, {});
     }
 
     render(agent) {
         if(!agent){
             return;
         }
+        this.generateNeuronConnectionsFromGenes(agent.genes.data);
+
         this.destroyDetails();
         this.clearHandler = this.clearHandlerGenerator(agent);
         this.computeClickHandler = this.computeClickHandleGenerator(agent);
         this.currentDetails = this.agentTemplate.content.cloneNode(true).querySelector('#details-container');
 
-        this.currentDetails.querySelector('h2').textContent = Symbol.keyFor(agent.id);
+        this.currentDetails.querySelector('h2').textContent = agent.id;
         this.currentDetails.querySelector('button.clear').addEventListener('click', this.clearHandler)
         this.currentDetails.querySelector('button.compute').addEventListener('click', this.computeClickHandler)
 
         this.renderNeuronLevels(agent);
-        this.wrapper.appendChild(this.currentDetails)
-        this.renderNeuronConnections(agent)
         this.renderResultsElements(agent);
+        this.wrapper.appendChild(this.currentDetails)
 
-        agent.brain.attach(this.brainComputeObserver)
-        agent.attach(this.agentDieObserver)
+        this.renderNeuronConnections(agent)
     }
 
-    renderResultsElements(agent) {
+    renderResultsElements() {
         const resultsTplEl = this.lvlTpl.content.cloneNode(true);
         const resultsEl = resultsTplEl.querySelector('.level');
         resultsEl.querySelector('h4').textContent = `Results`;
 
         const listEl = resultsTplEl.querySelector('.level-neurons');
         this.resultsElCache = [];
-        agent.brain.levels[agent.brain.levels.length - 1].forEach(node => {
+        this.neuronLevels.slice(-1)[0].forEach(node => {
             const resultEl = document.createElement('div');
             resultEl.classList.add('result')
             resultEl.setAttribute('id', `${node.id}_result`)
@@ -114,7 +121,7 @@ class AgentDetailsRenderer {
         this.currentDetails.querySelector('.brain').appendChild(resultsTplEl);
     }
 
-    renderNeuronConnections(agent){
+    renderNeuronConnections(){
         const svgEl = this.currentDetails.querySelectorAll(`.level-row svg`);
         svgEl?.forEach(svg => {
             const lines = svg.querySelectorAll('line');
@@ -124,9 +131,9 @@ class AgentDetailsRenderer {
         })
 
 
-        agent.brain.levels.forEach((lvl, idx) => {
+        this.neuronLevels.forEach((lvl, idx) => {
             lvl.forEach((neuron, nr) => {
-                agent.brain.connections[neuron.id]?.forEach(conn => {
+                this.neuronConnections[neuron.id]?.forEach(conn => {
                     const line = document.createElementNS('http://www.w3.org/2000/svg','line');
                     const source = this.currentDetails.querySelector(`#neuron_${neuron.id}`);
                     const dest = this.currentDetails.querySelector(`#neuron_${conn[0]}`);
@@ -145,9 +152,9 @@ class AgentDetailsRenderer {
 
     renderNeuronLevels(agent) {
         const brainWrapper = this.currentDetails.querySelector('.brain');
-        const redFactor = ~~(255 / agent.brain.levels.length);
+        const redFactor = ~~(255 / this.neuronLevels.length);
 
-        agent.brain.levels.forEach((lvl, idx) => {
+        this.neuronLevels.forEach((lvl, idx) => {
             const lvlTplEl = this.lvlTpl.content.cloneNode(true);
             const element = lvlTplEl.querySelector('.level');
             element.querySelector('h4').textContent = `Level ${idx}`;
@@ -169,7 +176,7 @@ class AgentDetailsRenderer {
     renderNeuron(neuron, rgb){
         const neuronEl = document.createElement('div');
         neuronEl.classList.add('neuron')
-        neuronEl.textContent = Symbol.keyFor(neuron.type)
+        neuronEl.textContent = neuron.type
         neuronEl.setAttribute('id', `neuron_${neuron.id}`)
         const brightness = Math.round(((parseInt(rgb[0]) * 299) +
             (parseInt(rgb[1]) * 587) +

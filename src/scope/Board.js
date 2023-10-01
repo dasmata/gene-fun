@@ -1,4 +1,4 @@
-class Map extends Observable{
+class Board extends Observable{
     size = {
         width: 0,
         height: 0
@@ -15,13 +15,17 @@ class Map extends Observable{
         super();
         this.size = size;
         this.levels = levels;
-        this.locationIdx = new Set();
         this.level = level;
+        this.population = [];
         this.initLevel();
     }
 
     setPopulation(population) {
         this.population = population;
+        this.locationIdx = new Set();
+        this.population.forEach(agent => {
+            this.locationIdx.add(`${agent.actionValue?.[0]},${agent.actionValue?.[1]}`);
+        })
     }
 
     initLevel() {
@@ -53,14 +57,15 @@ class Map extends Observable{
     }
 
     placeAgentsOnMap () {
-        const boundsObj = new SpawningBounds(this.getSpawningAreasData(), this.population.size)
-
+        const boundsObj = new SpawningBounds(this.getSpawningAreasData(), this.population.length)
         this.population.forEach((agent) => {
-            agent.actionValue = Map.getAgentCoords(
+            agent.actionValue = Board.getAgentCoords(
                 boundsObj.getBounds(),
-                Object.values(this.size).map(el => el - Map.agentSize),
+                Object.values(this.size).map(el => el - Board.agentSize),
                 data => !this.isOccupied(data)
             );
+            agent.oldActionValue = agent.actionValue;
+            this.locationIdx.add(`${agent.actionValue[0]},${agent.actionValue[1]}`);
             boundsObj.adjustLayer();
             boundsObj.adjustArea();
         });
@@ -88,7 +93,6 @@ class Map extends Observable{
 
         const deltaX = endVector[0] - startVector[0];
         const deltaY = endVector[1] - startVector[1];
-        const lineGradient = deltaY > 0 ? Math.round((deltaX) / (deltaY)) : 0;
 
         const limit = Math.max(Math.abs(deltaX), Math.abs(deltaY));
         const xSign = deltaX < 0 ? -1 : 1;
@@ -133,7 +137,7 @@ class Map extends Observable{
         const intervals = searchAreas || this.breedingAreas;
         const shuffledIntervals = shuffle(intervals);
         const agentsPerArea = [];
-        const foundAgents = this.population.find((agent) => {
+        const foundAgents = this.population.filter((agent) => {
             for(let i in shuffledIntervals){
                 const interval = shuffledIntervals[i];
                 const startVector = interval[0];
@@ -155,8 +159,8 @@ class Map extends Observable{
             if (acc) {
                 return acc
             }
-            const startVector = agent.actionValue
-            const endVector = startVector.add(new Vector([Map.agentSize-1, Map.agentSize-1], [this.size.width, this.size.height]))
+            const startVector = agent.actionValue instanceof Vector ? agent.actionValue : new Vector(agent.actionValue, Object.values(this.size));
+            const endVector = startVector.add(new Vector([Board.agentSize-1, Board.agentSize-1], [this.size.width, this.size.height]))
             if (
                 vector[0] >= startVector[0] && vector[0] <= endVector[0]
                 && vector[1] >= startVector[1] && vector[1] <= endVector[1]
@@ -169,15 +173,10 @@ class Map extends Observable{
     nextLevel() {
         this.level++;
         if(!this.levels[this.level]){
-            this.notify({
-                type: 'taskComplete'
-            });
-            return;
+            throw new Error('No more levels');
         }
         this.initLevel();
-        this.notify({
-            type: 'levelUp'
-        });
+        return 1;
     }
 
     update(e) {
@@ -186,7 +185,6 @@ class Map extends Observable{
         }
         const agent = e.payload;
         const oldActionValue = agent.oldActionValue;
-
         if (agent.alive) {
             const newActionValue = agent.actionValue;
             if (!this.canReach(oldActionValue, newActionValue)) {
@@ -203,9 +201,25 @@ class Map extends Observable{
         }
         agent.detach(this)
     }
+
+    toJSON(){
+        return {
+            breedingAreas: JSON.parse(JSON.stringify(this.breedingAreas)),
+            walls: JSON.parse(JSON.stringify(this.walls)),
+            spawnAreas: JSON.parse(JSON.stringify(this.spawnAreas)),
+            agents: this.population.reduce((acc, agent) => {
+                acc[agent.id] = {
+                    ...agent,
+                    actionValue: agent.actionValue.toJSON?.() || agent.actionValue,
+                    oldActionValue: agent.oldActionValue.toJSON?.() || agent.oldActionValue,
+                }
+                return acc;
+            }, {}),
+        };
+    }
 }
 
-Map.getAgentCoords = (bounds, vectorBase, validationFunction) => {
+Board.getAgentCoords = (bounds, vectorBase, validationFunction) => {
     const x = Math.ceil(
         Math.round(Math.random() * bounds.hSize) + bounds.hStart
     );
@@ -228,4 +242,4 @@ Map.getAgentCoords = (bounds, vectorBase, validationFunction) => {
     return coords;
 }
 
-Map.agentSize = 2;
+Board.agentSize = 2;

@@ -6,54 +6,49 @@ class Supervisor extends Observable {
 
     agents = new Set();
     status = 0;
-    updateLoop = null;
-    armageddonLoop = null;
     actionsNr = 0;
 
     constructor(
-        genLife = 10000,
-        actionInterval = 10,
         actionsNr,
         population,
     ) {
         super();
-        this.generationLifeTime = genLife;
-        this.actionInterval = actionInterval;
-        this.runner = this.frame.bind(this);
         this.agents = population;
-        this.actionsNr = actionsNr
+        this.actionsNr = actionsNr;
+        this.resetFrames();
     }
 
+    resetFrames() {
+        this.frameGenerator = (function* (actionsNr){
+            for(let i = 0; i < actionsNr; i++){
+                yield i;
+            }
+        })(this.actionsNr)
+    }
 
-
-    frame() {
-        const start = performance.mark('update-start');
-        this.agents.forEach(agent => agent.update())
-        const end = performance.mark('update-end');
-        const duration = end.startTime - start.startTime;
-        if(duration > this.actionInterval){
-            this.actionInterval++;
-        } else if (duration * 0.4 < this.actionInterval) {
-            this.actionInterval--;
-        }
-        this.generationLifeTime = this.actionInterval * this.actionsNr;
-        if (this.status && !this.updateLoop ) {
-            this.updateLoop = setInterval(this.runner, this.actionInterval)
-        }
+    frame(i) {
+        const results = {};
+        this.agents.forEach(agent => {
+            const agentData = agent.toJSON()
+            results[agentData.id] = {
+                results: agent.computeNextStep(),
+                agent: agent.toJSON()
+            };
+        })
+        this.notify({
+            type: 'computed',
+            payload: results
+        });
     }
 
     play() {
-        if (this.status) {
-            return
-        }
         this.status = 1;
-        this.runner();
-        const start = performance.mark('update-start');
-        this.armageddonLoop = setInterval(() => {
-            this.armageddon();
-            const end = performance.mark('update-end');
-            console.log('Generation lifetime', end.startTime - start.startTime);
-        }, this.generationLifeTime);
+        const frameNr = this.frameGenerator.next();
+        if (!frameNr.done) {
+            this.frame(frameNr);
+            return;
+        }
+        this.armageddon();
     }
 
     pause() {
@@ -76,6 +71,7 @@ class Supervisor extends Observable {
 
     setAgents(population){
         this.agents = population;
+        this.resetFrames();
     }
 
     kill() {

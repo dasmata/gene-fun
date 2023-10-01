@@ -1,6 +1,6 @@
 const seeLeftNeuron = function (agent) {
-    for(let idx in this.world.breedingAreas) {
-        const area = this.world.breedingAreas[idx];
+    for(let idx in this.ctx.breedingAreas) {
+        const area = this.ctx.breedingAreas[idx];
         if (agent.actionValue[0] - this.sightRange <= area[1][0]
             && agent.actionValue[1] > area[0][1]
             && agent.actionValue[1] < area[1][1]) {

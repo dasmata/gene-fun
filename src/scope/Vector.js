@@ -31,6 +31,10 @@ class Vector extends Array {
     equals(vct) {
         return vct[0] === this[0] && vct[1] === this[1];
     }
+
+    toJSON(){
+        return [...this]
+    }
 }
 
 Vector.wrapNormalized = (el, base) => {

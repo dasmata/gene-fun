@@ -4,20 +4,16 @@ class Brain extends Observable {
     connectionsDestIdx = {};
     levelIndex = {};
     agent = null;
-    rewardFunction;
-    constructor(neurons, agent, rewardFunction) {
+    constructor(neurons, agent) {
         super();
         this.agent = agent;
         const mappingFunc = lvl => (el, idx) => {
             this.levelIndex[neurons[el].id] = [lvl, idx]
             return neurons[el];
         }
-        this.levels = [
-            neurons.getInputNeurons().map(mappingFunc(0)),
-            neurons.getProcessingNeurons().map(mappingFunc(1)),
-            neurons.getOutputNeurons().map(mappingFunc(2))
-        ];
-        this.rewardFunction = rewardFunction;
+        this.levels = Array.from(new Array(neurons.getNeuronLevelsNum())).map((undef, idx) => {
+            return neurons.getNeuronsForLevel(idx).map(mappingFunc(idx))
+        });
     }
 
     addConnection(neuron1, neuron2, weight, id) {
@@ -77,8 +73,7 @@ class Brain extends Observable {
         return results;
     }
 
-    evaluate(result) {
-        const reward = this.rewardFunction(this.agent);
+    evaluate(result, reward) {
         const rewardsToApply = [];
         let found = false;
         this.levels[this.levels.length - 1].forEach(neuron => {
