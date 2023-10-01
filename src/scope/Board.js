@@ -1,4 +1,4 @@
-class Map extends Observable{
+class Board extends Observable{
     size = {
         width: 0,
         height: 0
@@ -59,9 +59,9 @@ class Map extends Observable{
     placeAgentsOnMap () {
         const boundsObj = new SpawningBounds(this.getSpawningAreasData(), this.population.length)
         this.population.forEach((agent) => {
-            agent.actionValue = Map.getAgentCoords(
+            agent.actionValue = Board.getAgentCoords(
                 boundsObj.getBounds(),
-                Object.values(this.size).map(el => el - Map.agentSize),
+                Object.values(this.size).map(el => el - Board.agentSize),
                 data => !this.isOccupied(data)
             );
             agent.oldActionValue = agent.actionValue;
@@ -159,8 +159,8 @@ class Map extends Observable{
             if (acc) {
                 return acc
             }
-            const startVector = agent.actionValue
-            const endVector = startVector.add(new Vector([Map.agentSize-1, Map.agentSize-1], [this.size.width, this.size.height]))
+            const startVector = agent.actionValue instanceof Vector ? agent.actionValue : new Vector(agent.actionValue, Object.values(this.size));
+            const endVector = startVector.add(new Vector([Board.agentSize-1, Board.agentSize-1], [this.size.width, this.size.height]))
             if (
                 vector[0] >= startVector[0] && vector[0] <= endVector[0]
                 && vector[1] >= startVector[1] && vector[1] <= endVector[1]
@@ -173,15 +173,10 @@ class Map extends Observable{
     nextLevel() {
         this.level++;
         if(!this.levels[this.level]){
-            this.notify({
-                type: 'taskComplete'
-            });
-            return;
+            throw new Error('No more levels');
         }
         this.initLevel();
-        this.notify({
-            type: 'levelUp'
-        });
+        return 1;
     }
 
     update(e) {
@@ -224,7 +219,7 @@ class Map extends Observable{
     }
 }
 
-Map.getAgentCoords = (bounds, vectorBase, validationFunction) => {
+Board.getAgentCoords = (bounds, vectorBase, validationFunction) => {
     const x = Math.ceil(
         Math.round(Math.random() * bounds.hSize) + bounds.hStart
     );
@@ -247,4 +242,4 @@ Map.getAgentCoords = (bounds, vectorBase, validationFunction) => {
     return coords;
 }
 
-Map.agentSize = 2;
+Board.agentSize = 2;

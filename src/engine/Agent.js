@@ -69,9 +69,6 @@ class Agent extends Observable {
         this.update();
     }
 
-    requestAction(action) {
-        this.requestedActions.push(action)
-    }
 
     die(){
         this.alive = false;
@@ -81,13 +78,6 @@ class Agent extends Observable {
             type: 'die',
             payload: this.toJSON()
         })
-    }
-
-    get x() {
-        return this.actionValue[0]
-    }
-    get y() {
-        return this.actionValue[1]
     }
 
     toJSON(){

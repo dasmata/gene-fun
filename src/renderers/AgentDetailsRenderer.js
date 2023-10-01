@@ -65,8 +65,10 @@ class AgentDetailsRenderer extends Observable{
 
     computeClickHandleGenerator(agent) {
         return (e) => {
-            const results = agent.brain.compute();
-            agent.brain.evaluate(results);
+            this.notify({
+                type: 'computeRequest',
+                payload: agent
+            });
         }
     }
 

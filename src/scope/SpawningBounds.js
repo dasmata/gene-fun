@@ -11,7 +11,7 @@ class SpawningBounds {
     constructor(spawningAreas, populationSize) {
         ({ areaData: this.areaData, totalSpawnArea: this.totalSpawnArea } = spawningAreas);
         this.populationDensity = populationSize / this.totalSpawnArea;
-        this.layerSize = Map.agentSize * 3;
+        this.layerSize = Board.agentSize * 3;
 
     }
 
@@ -38,9 +38,9 @@ class SpawningBounds {
     getBounds () {
         return {
             vStart: (this.currentLayer * this.layerSize) + this.areaData[this.currentArea].location[1],
-            vSize: this.layerSize - (Map.agentSize - 1),
+            vSize: this.layerSize - (Board.agentSize - 1),
             hStart: this.areaData[this.currentArea].location[0],
-            hSize: this.areaData[this.currentArea].size.width - (Map.agentSize - 1)
+            hSize: this.areaData[this.currentArea].size.width - (Board.agentSize - 1)
         }
     }
 }

@@ -1,11 +1,11 @@
 class ScopeNeuron extends GenericNeuron {
-    mapData;
+    ctx;
     constructor(...args){
         super(...args);
     }
 
-    setMap(mapData) {
-        this.mapData = mapData;
+    setContext(ctx) {
+        this.ctx = ctx;
     }
 }
 

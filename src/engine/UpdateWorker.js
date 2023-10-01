@@ -134,7 +134,14 @@ class UpdateWorker extends Observable {
                throw new Error('Invalid rpc context:', el);
             }
         });
-        ctx?.[data.method](...data.params)
+        const result = ctx?.[data.method](...data.params);
+        this.notify({
+            type: 'rpcResponse',
+            payload: {
+                ...data,
+                response: result
+            }
+        })
     }
 
     update(e){
@@ -158,6 +165,22 @@ class UpdateWorker extends Observable {
             });
             this.supervisor.play();
         }, 0)
+    }
+
+    testRunNeurons(agentId){
+        try {
+            const agent = [...this.supervisor.agents.find(el => {
+                return el.id === Symbol.for(agentId);
+            })][0]
+            if (!agent) {
+                throw new Error('Invalid agent');
+            }
+            return agent.computeNextStep();
+        } catch (e) {
+            console.error(e);
+            return 0;
+        }
+
     }
 }
 

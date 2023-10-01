@@ -14,7 +14,7 @@ class MapRenderer extends Observable{
 
     handleClick = (e) => {
         const clickVector = new Vector(
-            [~~(e.offsetX / (Map.agentSize * 2)), ~~(e.offsetY / (Map.agentSize * 2))],
+            [~~(e.offsetX / (Board.agentSize * 2)), ~~(e.offsetY / (Board.agentSize * 2))],
             [this.map.size.width, this.map.size.height]
         )
         const agent = this.map.findAgent(clickVector);
