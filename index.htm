@@ -325,7 +325,7 @@
         }
 
         saveHandler(type){
-            const population = type === 'best' ?  this.bestPopulation?.length : this.map?.population;
+            const population = type === 'best' ?  this.bestPopulation : this.map?.population;
             const filename = type === 'best' ?  'bestPopulation' : 'currentPopulation';
             if(!population?.length){
                 console.error('Not enough data');
