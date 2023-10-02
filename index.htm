@@ -359,6 +359,7 @@
             if (survivability > this.survivabilityThreshold){
                 try{
                     this.levelUp();
+                    this.armageddonStats.maxSurvivability = null;
                 } catch (e) {
                     alert('Great success!!');
                     return;
@@ -376,6 +377,8 @@
             Object.keys(this.neuronTypes).forEach(id => {
                 this.sendNeuronContext(this.neuronTypes[id].type);
             });
+            this.mapRenderer.clear();
+            this.mapRenderer.render();
         }
 
         startRendering = () => {
@@ -427,7 +430,6 @@
                 currentActionValue.oldActionValue = currentActionValue.actionValue;
                 currentActionValue.actionValue = actionValue.toJSON();
             }
-
             return currentActionValue;
 
         }

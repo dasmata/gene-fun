@@ -6,151 +6,151 @@ const config = {
     size,
     levels: [
         // lvl 1
-        // {
-        //     walls: [],
-        //     breedingAreas: [
-        //         [
-        //             new Vector([0, 0], Object.values(size)),
-        //             new Vector([size.width / 2.5, size.height / 2.5], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([size.width - (size.width / 2.5), 0], Object.values(size)),
-        //             new Vector([size.width, size.height / 2.5], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([size.width - (size.width / 2.5), size.height - (size.height / 2.5)], Object.values(size)),
-        //             new Vector([size.width, size.height], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([0, size.height - (size.height / 2.5)], Object.values(size)),
-        //             new Vector([size.width / 2.5, size.height], Object.values(size)),
-        //         ],
-        //     ],
-        //     spawnAreas: [
-        //         [
-        //             new Vector([size.width / 2.5, 0], Object.values(size)),
-        //             new Vector([size.width - (size.width / 2.5), size.height], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([0, size.height / 2.5], Object.values(size)),
-        //             new Vector([size.width / 2.5, size.height - size.height / 2.5], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([size.width - size.width / 2.5, size.height / 2.5], Object.values(size)),
-        //             new Vector([size.width, size.height - size.height / 2.5], Object.values(size)),
-        //         ],
-        //     ]
-        // },
-        // {
-        //     walls: [],
-        //     breedingAreas: [
-        //         [
-        //             new Vector([0, 0], Object.values(size)),
-        //             new Vector([size.width / 6, size.height / 6], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([size.width - (size.width / 6), 0], Object.values(size)),
-        //             new Vector([size.width, size.height / 6], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([size.width - (size.width / 6), size.height - (size.height / 6)], Object.values(size)),
-        //             new Vector([size.width, size.height], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([0, size.height - (size.height / 6)], Object.values(size)),
-        //             new Vector([size.width / 6, size.height], Object.values(size)),
-        //         ],
-        //     ],
-        //     spawnAreas: [
-        //         [
-        //             new Vector([0, 0], Object.values(size)),
-        //             new Vector([size.width, size.height], Object.values(size)),
-        //         ]
-        //     ]
-        // },
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 2.5, size.height / 2.5], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 2.5), 0], Object.values(size)),
+                    new Vector([size.width, size.height / 2.5], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 2.5), size.height - (size.height / 2.5)], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+                [
+                    new Vector([0, size.height - (size.height / 2.5)], Object.values(size)),
+                    new Vector([size.width / 2.5, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([size.width / 2.5, 0], Object.values(size)),
+                    new Vector([size.width - (size.width / 2.5), size.height], Object.values(size)),
+                ],
+                [
+                    new Vector([0, size.height / 2.5], Object.values(size)),
+                    new Vector([size.width / 2.5, size.height - size.height / 2.5], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - size.width / 2.5, size.height / 2.5], Object.values(size)),
+                    new Vector([size.width, size.height - size.height / 2.5], Object.values(size)),
+                ],
+            ]
+        },
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 6, size.height / 6], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 6), 0], Object.values(size)),
+                    new Vector([size.width, size.height / 6], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 6), size.height - (size.height / 6)], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+                [
+                    new Vector([0, size.height - (size.height / 6)], Object.values(size)),
+                    new Vector([size.width / 6, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ]
+            ]
+        },
         // lvl 2
-        // {
-        //     walls: [],
-        //     breedingAreas: [
-        //         [
-        //             new Vector([size.width - (size.width / 2), 0], Object.values(size)),
-        //             new Vector([size.width, (size.height / 2) - 20], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([size.width - (size.width / 2), (size.height / 2) + 20], Object.values(size)),
-        //             new Vector([size.width, size.height], Object.values(size)),
-        //         ],
-        //     ],
-        //     spawnAreas: [
-        //         [
-        //             new Vector([0, 0], Object.values(size)),
-        //             new Vector([size.width, size.height], Object.values(size)),
-        //         ]
-        //     ]
-        // },
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([size.width - (size.width / 2), 0], Object.values(size)),
+                    new Vector([size.width, (size.height / 2) - 20], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 2), (size.height / 2) + 20], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ]
+            ]
+        },
         // lvl 3
-        // {
-        //     walls: [],
-        //     breedingAreas: [
-        //         [
-        //             new Vector([size.width - (size.width / 2), 0], Object.values(size)),
-        //             new Vector([size.width, (size.height / 2) - 20], Object.values(size)),
-        //         ],
-        //         [
-        //             new Vector([size.width - (size.width / 2), (size.height / 2) + 20], Object.values(size)),
-        //             new Vector([size.width, size.height], Object.values(size)),
-        //         ],
-        //     ],
-        //     spawnAreas: [
-        //         [
-        //             new Vector([0, 0], Object.values(size)),
-        //             new Vector([size.width / 2, size.height], Object.values(size)),
-        //         ]
-        //     ]
-        // },
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([size.width - (size.width / 2), 0], Object.values(size)),
+                    new Vector([size.width, (size.height / 2) - 20], Object.values(size)),
+                ],
+                [
+                    new Vector([size.width - (size.width / 2), (size.height / 2) + 20], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 2, size.height], Object.values(size)),
+                ]
+            ]
+        },
         // lvl 4
-        // {
-        //     walls: [],
-        //     breedingAreas: [
-        //         [
-        //             new Vector([size.width - (size.width / 8), 0], Object.values(size)),
-        //             new Vector([size.width, size.height], Object.values(size)),
-        //         ],
-        //     ],
-        //     spawnAreas: [
-        //         [
-        //             new Vector([0, 0], Object.values(size)),
-        //             new Vector([size.width / 2, size.height], Object.values(size)),
-        //         ]
-        //     ]
-        // },
+        {
+            walls: [],
+            breedingAreas: [
+                [
+                    new Vector([size.width - (size.width / 8), 0], Object.values(size)),
+                    new Vector([size.width, size.height], Object.values(size)),
+                ],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 2, size.height], Object.values(size)),
+                ]
+            ]
+        },
         // lvl 5
-        // {
-        //     walls: [],
-        //     breedingAreas: [
-        //         [new Vector([size.width - (size.width / 8), 0], Object.values(size)), new Vector([size.width, size.height], Object.values(size))],
-        //     ],
-        //     spawnAreas: [
-        //         [
-        //             new Vector([0, 0], Object.values(size)),
-        //             new Vector([size.width / 8, size.height], Object.values(size)),
-        //         ],
-        //     ]
-        // },
-        // {
-        //     walls: [
-        //         [new Vector([180,80], Object.values(size)), new Vector([182,170], Object.values(size))],
-        //     ],
-        //     breedingAreas: [
-        //         [new Vector([size.width - (size.width / 8), 0], Object.values(size)), new Vector([size.width, size.height], Object.values(size))],
-        //     ],
-        //     spawnAreas: [
-        //         [
-        //             new Vector([0, 0], Object.values(size)),
-        //             new Vector([size.width / 8, size.height], Object.values(size)),
-        //         ],
-        //     ]
-        // },
+        {
+            walls: [],
+            breedingAreas: [
+                [new Vector([size.width - (size.width / 8), 0], Object.values(size)), new Vector([size.width, size.height], Object.values(size))],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 8, size.height], Object.values(size)),
+                ],
+            ]
+        },
+        {
+            walls: [
+                [new Vector([180,80], Object.values(size)), new Vector([182,170], Object.values(size))],
+            ],
+            breedingAreas: [
+                [new Vector([size.width - (size.width / 8), 0], Object.values(size)), new Vector([size.width, size.height], Object.values(size))],
+            ],
+            spawnAreas: [
+                [
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 8, size.height], Object.values(size)),
+                ],
+            ]
+        },
         {
             walls: [
                 [new Vector([60,30], Object.values(size)), new Vector([62,120], Object.values(size))],
