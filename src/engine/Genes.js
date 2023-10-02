@@ -5,7 +5,7 @@ class Genes extends Array {
     limits = {};
     fingerprint = '';
     connectionMethods;
-    constructor(neuronPool, size, parents) {
+    constructor(neuronPool, size, parents, genes) {
         super();
         this.parents = parents;
         this.size = size;
@@ -21,7 +21,11 @@ class Genes extends Array {
             }
             this.connectionMethods.push([i, next])
         }
-        this.init();
+        if(genes) {
+            genes.forEach(gene => this.push(gene));
+        } else {
+            this.init();
+        }
         this.setFingerprint()
     }
     init(){

@@ -13,6 +13,7 @@
     <script src="src/renderers/WallRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/AreaRenderer.js" type="text/javascript" ></script>
     <script src="src/renderers/StatsRenderer.js" type="text/javascript" ></script>
+    <script src="src/renderers/PageRenderer.js" type="text/javascript" ></script>
 
     <script src="src/scope/SpawningBounds.js" type="text/javascript" ></script>
     <script src="src/scope/Vector.js" type="text/javascript" ></script>
@@ -33,8 +34,10 @@
     <script src="src/scope/neurons/processingVoidNeuron.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/neuronPool.js" type="text/javascript" ></script>
 
-    <script src="src/utils.js" type="text/javascript" ></script>
+    <script src="src/engine/utils.js" type="text/javascript" ></script>
     <script src="src/scope/config.js" type="text/javascript" ></script>
+    <script src="src/FileWriter.js" type="text/javascript" ></script>
+    <script src="src/EventBus.js" type="text/javascript" ></script>
 
     <style>
         :root {
@@ -60,6 +63,9 @@
             z-index: 0;
             position: absolute;
         }
+        fieldset {
+            width: 530px;
+        }
         #canvas-wrapper {
             width: calc(256px * (2 + 2));
             position: relative;
@@ -67,6 +73,14 @@
         #controls {
             width: 400px;
             padding-left: 5px;
+        }
+        label, .stats .stats-row {
+            margin-top: 5px;
+            display: flex;
+        }
+        label span, .stats .stats-label {
+            display: block;
+            width: 150px;
         }
         .brain {
             padding: 10px 0;
@@ -111,25 +125,55 @@
 <main>
     <section id="canvas-wrapper"></section>
     <section id="controls">
-        <span>Gen <span id="gen">0</span></span>
-        <button id="killSw">Kill everyone!!</button>
-        <button id="start">create</button>
-        <button id="play">play</button>
-        <button id="pause">pause</button>
-        <div style="padding:10px">
+        <fieldset>
+            <legend>Controls</legend>
+            <span>Gen <span id="gen">0</span></span>
+            <button id="killSw">Kill everyone!!</button>
+            <button id="start">create</button>
+            <button id="play">play</button>
+            <button id="pause">pause</button>
+            <label>
+                <span>Level: </span>
+                <input name="level" type="number" id="level-indicator" />
+            </label>
+            <label>
+                <span>Actions: </span>
+                <input name="actions" type="range" min="1" max="2000" id="actions-slider" oninput="this.nextElementSibling.value = this.value" />
+                <output></output>
+            </label>
+            <label>
+                <span>Gene nr: </span>
+                <input name="geneNumber" type="range" id="genes-slider" max="20" min="1" oninput="this.nextElementSibling.value = this.value" />
+                <output></output>
+            </label>
+            <label>
+                <span>Min survivability: </span>
+                <input name="survivabilityThreshold" type="range" id="survivability-slider" oninput="this.nextElementSibling.value = this.value" />
+                <output></output>
+            </label>
+        </fieldset>
 
-        </div>
+        <fieldset id="import-export">
+            <legend>Import / Export agents</legend>
+            <button id="save-current">Save current population</button>
+            <button id="save-best">Save best population</button>
+            <label>
+                <span>Import agents<br /><sub>(json format)<sub></span>
+                <input type="file" id="import-population" />
+            </label>
+        </fieldset>
     </section>
 </main>
 <template id="agent">
     <div>
-        <section id="details-container">
-                <h2></h2>
-                <div class="brain"></div>
-                <div class="genome"></div>
-                <button class="clear">clear</button>
-                <button class="compute">compute</button>
-            </section>
+        <fieldset id="details-container">
+            <legend>Agent details</legend>
+            <h2></h2>
+            <div class="brain"></div>
+            <div class="genome"></div>
+            <button class="clear">clear</button>
+            <button class="compute">compute</button>
+        </fieldset>
     </div>
 </template>
 <template id="level">
@@ -143,12 +187,13 @@
 </template>
 
 <template id="stats">
-    <section class="stats">
+    <fieldset class="stats">
+        <legend>Stats</legend>
         <div class="stats-row">
             <div class="stats-label">Label</div>
             <div class="stats-value">value</div>
         </div>
-    </section>
+    </fieldset>
 </template>
 
 <script>
@@ -166,24 +211,37 @@
     const STATUS_RUNNING = 1;
     const STATUS_INITIALIZED = 2;
 
+    const methodEventsMap = {
+        neuronCreated: 'handleNeuronCreated',
+        agentCreated: 'agentCreated',
+        ready: 'handleWorkerReady',
+        computed: 'handleComputed',
+        armageddon: 'handleArmageddon',
+        agentClick: 'agentClickHandler',
+        computeRequest: 'computeRequest',
+        rpcResponse: 'rpcResponse',
+        create: 'createHandler',
+        play: 'playHandler',
+        kill: 'killHandler',
+        pause: 'pauseHandler',
+        save: 'saveHandler',
+        importAgents: 'importAgents'
+    }
+
 
     class Page {
-        killBtn;
-        createBtn;
-        pauseBtn;
-        playBtn;
-        controlsElement;
-
         actions = 1250;
         populationSize = 1000;
         geneNumber = 12;
         survivabilityThreshold = 60;
+        level = 0;
 
         map;
 
         mapRenderer;
         detailsRenderer;
         statsRenderer;
+        pageRenderer;
 
         neuronTypes;
         population;
@@ -192,71 +250,61 @@
         armageddonStats = {};
         rpcCallbacks = new Map();
 
+        bestPopulation = [];
+
         constructor(config){
-            this.createBtn = document.getElementById('start');
-            this.killBtn = document.getElementById('killSw');
-            this.pauseBtn = document.getElementById('pause');
-            this.playBtn = document.getElementById('play');
-            this.controlsElement = document.getElementById('controls')
             this.config = config;
-
-
-            this.createClickHandler = this.createClickHandler.bind(this);
-            this.playClickHandler = this.playClickHandler.bind(this);
-            this.pauseClickHandler = this.pauseClickHandler.bind(this);
-            this.killClickHandler = this.killClickHandler.bind(this);
+            Object.keys(methodEventsMap).forEach(messageType => {
+                EventBus.subscribe(messageType, this[methodEventsMap[messageType]].bind(this));
+            });
             this.update = this.update.bind(this);
-
-            this.createBtn.addEventListener('click', this.createClickHandler)
-
-
-
             this.neuronTypes = {};
             this.population = [];
-
-
-
+            this.pageRenderer = new PageRenderer();
+            EventBus.subscribe('paramChange', e => {
+                if(typeof this[e.name] !== 'undefined'){
+                    this[e.name] = e.value;
+                }
+                if(e.name === 'geneNumber' || e.name === 'actions'){
+                    this.sendRpc(
+                        [],
+                        `set${e.name.slice(0,1).toUpperCase()}${e.name.slice(1)}`,
+                        [e.value]
+                    )
+                }
+            });
         }
 
         createMap() {
             this.map = new Board(
                 this.config.size,
-                this.config.levels
+                this.config.levels,
+                this.level
             )
-            this.map.attach(this);
             this.initialMapData = this.map.toJSON();
         }
 
-        killClickHandler(){
+        killHandler(){
             this.status = STATUS_PAUSED;
             this.stopRendering();
-            this.detailsRenderer = null;
-            this.mapRenderer = null;
-            this.statsRenderer = null;
             this.neuronTypes = {};
             this.population = [];
             this.map = null;
-            this.playBtn.removeEventListener('click', this.playClickHandler);
-            this.pauseBtn.removeEventListener('click', this.pauseClickHandler);
-            this.createBtn.addEventListener('click', this.createClickHandler);
         }
 
-        playClickHandler(){
+        playHandler(){
             this.status = STATUS_RUNNING;
             this.updateWorker.postMessage({
                 type: 'setAggregatedValues',
                 payload: this.map.toJSON()
             })
-            this.createBtn.removeEventListener('click', this.createClickHandler);
         }
 
-        pauseClickHandler(){
+        pauseHandler(){
             this.status = STATUS_PAUSED;
-            this.playBtn.removeEventListener('click', this.playClickHandler);
-            this.playBtn.addEventListener('click', this.playClickHandler);
         }
 
-        createClickHandler(){
+        createHandler(){
             this.createMap();
             this.status = STATUS_INITIALIZED;
             this.updateWorker = new Worker('src/engine/UpdateWorker.js', {name: 'updateWorker'});
@@ -274,10 +322,17 @@
                     minActions: this.actions,
                 }
             });
+        }
 
-            this.pauseBtn.addEventListener('click', this.pauseClickHandler);
-            this.killBtn.addEventListener('click', this.killClickHandler);
-            this.createBtn.removeEventListener('click', this.createClickHandler);
+        saveHandler(type){
+            const population = type === 'best' ?  this.bestPopulation?.length : this.map?.population;
+            const filename = type === 'best' ?  'bestPopulation' : 'currentPopulation';
+            if(!population?.length){
+                console.error('Not enough data');
+                return;
+            }
+            const writer = new FileWriter()
+            writer.download(JSON.stringify(population), `${filename}.json`);
         }
 
         handleWorkerReady(){
@@ -288,19 +343,17 @@
             });
             this.map.placeAgentsOnMap();
             if (this.status === STATUS_RUNNING) {
-                this.playBtn.removeEventListener('click', this.playClickHandler);
-                this.playClickHandler();
+                this.playHandler();
                 this.renderAgentDetails();
                 return;
             }
             if(this.status === STATUS_INITIALIZED){
                 this.startRendering();
             }
-            this.playBtn.addEventListener('click', this.playClickHandler);
         }
 
-        agentClickHandler(payload){
-            this.renderAgentDetails(payload.agent);
+        agentClickHandler({ agent }){
+            this.renderAgentDetails(agent);
         }
 
         sendNeuronContext(type){
@@ -309,7 +362,7 @@
 
         sendRpc(path, method, params, callback) {
             const id = `${Math.random().toString(36).substring(2,7)}-${Math.random().toString(36).substring(2,7)}-${Math.random().toString(36).substring(2,7)}`;
-            this.updateWorker.postMessage({
+            this.updateWorker?.postMessage({
                 type: 'rpc',
                 payload: {
                     ctxPath: path,
@@ -317,17 +370,18 @@
                     params: params,
                     reqId: id
                 }
-            });
-            this.rpcCallbacks.set(id, callback || (() => {}));
+            }) && this.rpcCallbacks.set(id, callback || (() => {}));
             return id;
         }
 
-        handleNeuronCreated(neuron) {
+        handleNeuronCreated(e) {
+            const neuron = e.data.payload;
             this.neuronTypes[neuron.id] = {...neuron};
             this.sendNeuronContext(neuron.type);
         }
 
-        handleComputed(computeResults){
+        handleComputed(e){
+            const computeResults = e.data.payload;
             if(this.selectedAgent.id){
                 this.detailsRenderer.update(computeResults[this.selectedAgent.id])
             }
@@ -349,6 +403,9 @@
             this.population = [];
             const [replicators, agentsPerArea] = this.map.findAllAgents();
             const survivability = Math.round((replicators.length / this.map.population.length) * 10000) / 100;
+            if(survivability > this.armageddonStats.survivability){
+                this.bestPopulation = this.map.population;
+            }
             this.armageddonStats = {
                 agentsPerArea,
                 replicatorsNr: replicators.length,
@@ -367,7 +424,7 @@
             }
             this.updateWorker.postMessage({
                 type: 'createDescendants',
-                payload: replicators
+                payload: JSON.parse(JSON.stringify(replicators))
             })
         }
 
@@ -382,12 +439,9 @@
         }
 
         startRendering = () => {
-            this.detailsRenderer = this.detailsRenderer || new AgentDetailsRenderer(this.controlsElement, this.map, this.neuronTypes);
+            this.detailsRenderer = this.detailsRenderer || new AgentDetailsRenderer(document.getElementById('controls'), this.map, this.neuronTypes);
             this.mapRenderer = this.mapRenderer || new MapRenderer(this.map);
-            this.statsRenderer = this.statsRenderer || new StatsRenderer(this.controlsElement);
-
-            this.mapRenderer.attach(this);
-            this.detailsRenderer.attach(this);
+            this.statsRenderer = this.statsRenderer || new StatsRenderer(document.getElementById('controls'));
 
             this.mapRenderer.render();
             this.statsRenderer.render({
@@ -402,12 +456,7 @@
         }
 
         stopRendering(){
-            this.mapRenderer.detach(this);
-            this.mapRenderer.clear();
-            this.detailsRenderer.clear();
-            this.statsRenderer.clear();
-            this.mapRenderer = null;
-            this.detailsRenderer = null;
+            EventBus.publish('stopRender');
         }
 
         actionAggregator(results, currentActionValue, neuronTypes) {
@@ -451,59 +500,62 @@
             }))
         }
 
-        update(e){
-            switch(e.data?.type || e.type){
-                case 'neuronCreated':
-                    this.handleNeuronCreated(e.data.payload);
-                    break;
-                case 'agentCreated':
-                    this.population.push(e.data.payload);
-                    break;
-                case 'ready':
-                    this.handleWorkerReady();
-                    break;
-                case 'computed':
-                    this.handleComputed(e.data.payload);
-                    break;
-                case 'armageddon':
-                    this.handleArmageddon()
-                    break;
-                case 'agentClick':
-                    this.agentClickHandler(e.payload)
-                    break;
-                case 'computeRequest':
-                    this.sendRpc([], 'testRunNeurons', [e.payload.id], response => {
-                        const actionResult = this.actionAggregator(
-                            response,
-                            {
-                                ...e.payload,
-                                actionValue: [...e.payload.actionValue],
-                                oldActionValue: [...e.payload.oldActionValue]
-                            },
-                            this.neuronTypes
-                        );
-                        console.log(actionResult)
-                        actionResult.reward = this.getActionReward(actionResult);
-                        this.map.population.forEach(agent => {
-                            if (agent.id === actionResult.id) {
-                                agent.actionValue = actionResult.actionValue;
-                                agent.oldActionValue = actionResult.oldActionValue;
-                            }
-                        });
-
-                        this.detailsRenderer.update({
-                            results: response,
-                            agent: actionResult
-                        })
-                        console.log(response);
-                    });
-                    break;
-                case 'rpcResponse':
-                    if (this.rpcCallbacks.has(e.data.payload.reqId)) {
-                        this.rpcCallbacks.get(e.data.payload.reqId)(e.data.payload.response);
+        computeRequest(agent) {
+            this.sendRpc([], 'testRunNeurons', [agent.id], response => {
+                const actionResult = this.actionAggregator(
+                    response,
+                    {
+                        ...agent,
+                        actionValue: [...agent.actionValue],
+                        oldActionValue: [...agent.oldActionValue]
+                    },
+                    this.neuronTypes
+                );
+                actionResult.reward = this.getActionReward(actionResult);
+                this.map.population.forEach(agent => {
+                    if (agent.id === actionResult.id) {
+                        agent.actionValue = actionResult.actionValue;
+                        agent.oldActionValue = actionResult.oldActionValue;
                     }
-                    break;
+                });
+
+                this.detailsRenderer.update({
+                    results: response,
+                    agent: actionResult
+                })
+            });
+        }
+
+        agentCreated(e){
+            this.population.push(e.data.payload);
+        }
+
+        rpcResponse(e) {
+            if (this.rpcCallbacks.has(e.data.payload.reqId)) {
+                this.rpcCallbacks.get(e.data.payload.reqId)(e.data.payload.response);
             }
+        }
+
+        importAgents(agents){
+            if(!this.map){
+                this.createHandler();
+            }
+            const readyCallback = () => {
+                this.stopRendering();
+                unsubscribe();
+                this.map.population = [];
+                this.population = [];
+                this.updateWorker.postMessage({
+                    type: 'importAgents',
+                    payload: agents
+                });
+                this.pageRenderer.setReadyState();
+            };
+            const unsubscribe = EventBus.subscribe('ready', readyCallback);
+        }
+
+        update(e){
+            EventBus.publish(e.data?.type || e.type, e);
         }
 
     }

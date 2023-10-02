@@ -18,7 +18,8 @@ class Agent extends Observable {
         genomeSize,
         parents = [],
         actionsAggregator,
-        rewardFunction
+        rewardFunction,
+        genes
     ){
         super();
         this.actionValue = actionValue;
@@ -26,7 +27,7 @@ class Agent extends Observable {
         this.neurons = neuronPool;
         this.parents = parents;
         this.alive = true;
-        this.genes = new Genes(this.neurons, genomeSize, parents);
+        this.genes = new Genes(this.neurons, genomeSize, parents, genes);
         this.initBrain(rewardFunction);
         this.actionsAggregator = actionsAggregator;
 

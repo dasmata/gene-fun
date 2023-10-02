@@ -11,13 +11,20 @@ class Board extends Observable{
     walls = [];
     locationIdx;
 
-    constructor(size, levels, level = 7) {
+    constructor(size, levels, level = 0) {
         super();
         this.size = size;
         this.levels = levels;
         this.level = level;
         this.population = [];
         this.initLevel();
+        EventBus.subscribe('paramChange', e => {
+            if(typeof this[e.name] !== 'undefined'){
+                this[e.name] = e.value;
+                this.initLevel();
+                this.placeAgentsOnMap();
+            }
+        });
     }
 
     setPopulation(population) {
@@ -174,7 +181,10 @@ class Board extends Observable{
         if(!this.levels[this.level]){
             throw new Error('No more levels');
         }
-        this.initLevel();
+        EventBus.publish('paramChange', {
+            name: 'level',
+            value: this.level
+        })
         return 1;
     }
 

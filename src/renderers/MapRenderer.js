@@ -10,6 +10,7 @@ class MapRenderer extends Observable{
         super();
         this.map = map;
         this.frameRenderer = this.renderMap.bind(this);
+        EventBus.subscribe('stopRender', this.clear.bind(this));
     }
 
     handleClick = (e) => {
@@ -19,10 +20,7 @@ class MapRenderer extends Observable{
         )
         const agent = this.map.findAgent(clickVector);
         if (agent) {
-            this.notify({
-                type: 'agentClick',
-                payload:  { agent, map: this.map }
-            })
+            EventBus.publish('agentClick', { agent, map: this.map })
         }
     }
 

@@ -6,7 +6,7 @@ importScripts(
     'Population.js',
     'Genes.js',
     'Supervisor.js',
-    '../utils.js'
+    'utils.js'
 );
 
 class UpdateWorker extends Observable {
@@ -33,6 +33,19 @@ class UpdateWorker extends Observable {
             type: 'ready',
             payload: null
         })
+    }
+
+    importAgents(agents) {
+        const population = this.populationFactory(agents.length);
+        const agentFactory = this.getAgentFactory();
+        agents.forEach(agent => {
+            population.add(agentFactory(null, agent.genes.data));
+        });
+        this.supervisor.agents = population;
+        this.notify({
+            type: 'ready',
+            payload: null
+        });
     }
 
     createDescendants(parents){
@@ -89,16 +102,16 @@ class UpdateWorker extends Observable {
         this.supervisor.attach(this);
     }
 
-    populationFactory(){
+    populationFactory(size){
         return new Population(
             this,
-            this.populationSize,
+            size || this.populationSize,
             this.getAgentFactory()
         );
     }
 
     getAgentFactory(){
-        return (parents = []) => {
+        return (parents = [], genes = null) => {
             const agent = new Agent(
                 null,
                 this.neuronPool,
@@ -115,7 +128,8 @@ class UpdateWorker extends Observable {
                         type: 'calculateReward',
                         payload: { agent }
                     });
-                }
+                },
+                genes
             );
             agent.attach(this)
             this.notify({
@@ -182,6 +196,17 @@ class UpdateWorker extends Observable {
         }
 
     }
+
+    setGeneNumber(val) {
+        this.geneNumber = val;
+    }
+
+    setActions(val) {
+        this.minActions = val;
+        if (this.supervisor) {
+            this.supervisor.actionsNr = val;
+        }
+    }
 }
 
 const worker = new UpdateWorker();
@@ -219,7 +244,10 @@ self.onmessage = (e) => {
             worker.setAggregatedValues(e.data.payload.agents);
             break;
         case 'createDescendants':
-            worker.createDescendants(e.data.payload)
+            worker.createDescendants(e.data.payload);
+            break;
+        case 'importAgents':
+            worker.importAgents(e.data.payload);
             break;
     }
 }

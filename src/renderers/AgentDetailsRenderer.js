@@ -1,11 +1,10 @@
-class AgentDetailsRenderer extends Observable{
+class AgentDetailsRenderer {
     currentDetails = null
     wrapper = null;
     agentTemplate = null;
     resultsElCache = [];
     map = null;
     brainComputeObserver = null;
-    agentDieObserver = null;
     lvlTpl = null;
     clearHandler = null;
     computeClickHandler = null;
@@ -13,7 +12,6 @@ class AgentDetailsRenderer extends Observable{
     neuronConnections = {};
 
     constructor(wrapper, map, neurons) {
-        super();
         this.wrapper = wrapper;
         this.map = map;
         this.neurons = neurons;
@@ -24,6 +22,7 @@ class AgentDetailsRenderer extends Observable{
         }, []);
         this.agentTemplate = document.getElementById('agent');
         this.lvlTpl = document.getElementById('level');
+        EventBus.subscribe('stopRender', this.clear.bind(this));
     }
 
     clear() {
@@ -65,10 +64,7 @@ class AgentDetailsRenderer extends Observable{
 
     computeClickHandleGenerator(agent) {
         return (e) => {
-            this.notify({
-                type: 'computeRequest',
-                payload: agent
-            });
+            EventBus.publish('computeRequest', agent);
         }
     }
 

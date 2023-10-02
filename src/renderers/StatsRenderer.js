@@ -1,21 +1,26 @@
 class StatsRenderer {
     genMarkerElement;
     currentElements;
+    wrapper;
 
     generationsNr;
     constructor(wrapper){
         this.generationsNr = 0;
         this.currentElements = [];
         this.genMarkerElement = document.getElementById('gen');
-        this.statsElement = document.getElementById('stats').content.cloneNode(true).querySelector('section.stats');
+        this.statsElement = document.getElementById('stats').content.cloneNode(true).querySelector('.stats');
         this.statsValueTpl = this.statsElement.querySelector('.stats-row');
         this.statsElement.removeChild(this.statsValueTpl);
-        wrapper.appendChild(this.statsElement);
+        this.wrapper = wrapper;
+        EventBus.subscribe('stopRender', this.clear.bind(this));
     }
 
     render(generationStats){
         if(generationStats){
             this.renderGenerationStats(generationStats);
+        }
+        if(!this.wrapper.contains(this.statsElement)){
+            this.wrapper.appendChild(this.statsElement);
         }
         this.genMarkerElement.textContent = this.generationsNr;
         this.generationsNr++;
@@ -48,5 +53,7 @@ class StatsRenderer {
         this.currentElements.forEach(el => {
             this.statsElement.removeChild(el);
         });
+        this.wrapper.removeChild(this.statsElement);
+        this.currentElements = [];
     }
 }
