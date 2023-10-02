@@ -45,5 +45,8 @@ class StatsRenderer {
     clear(){
         this.generationsNr = 0;
         this.genMarkerElement.textContent = this.generationsNr;
+        this.currentElements.forEach(el => {
+            this.statsElement.removeChild(el);
+        });
     }
 }

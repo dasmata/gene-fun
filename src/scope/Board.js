@@ -11,7 +11,7 @@ class Board extends Observable{
     walls = [];
     locationIdx;
 
-    constructor(size, levels, level = 0) {
+    constructor(size, levels, level = 7) {
         super();
         this.size = size;
         this.levels = levels;
@@ -90,7 +90,6 @@ class Board extends Observable{
         if(startVector.equals(endVector)){
             return true;
         }
-
         const deltaX = endVector[0] - startVector[0];
         const deltaY = endVector[1] - startVector[1];
 
@@ -100,7 +99,7 @@ class Board extends Observable{
 
         const path = [];
         const base = Object.values(this.size);
-        for(let i = 1; i <= limit; i++){
+        for(let i = Board.agentSize; i <= limit; i += Board.agentSize){
             if(deltaX === 0){
                 path.push(new Vector([
                     endVector[0],
