@@ -12,7 +12,7 @@ class GenericNeuron {
     }
 
     main(agent, input) {
-        return this.process(agent, (input < 0 || !input) ? 0 : 1)
+        return this.process(agent, input)
     }
 }
 ( self || {} ).GenericNeuron = GenericNeuron;

@@ -118,6 +118,9 @@ class AgentDetailsRenderer {
     }
 
     renderNeuronConnections(){
+        if(!this.currentDetails){
+            return;
+        }
         const svgEl = this.currentDetails.querySelectorAll(`.level-row svg`);
         svgEl?.forEach(svg => {
             const lines = svg.querySelectorAll('line');

@@ -4,11 +4,13 @@ class Genes extends Array {
     parents = [];
     limits = {};
     fingerprint = '';
+    useRandomNeuronConnections;
     connectionMethods;
-    constructor(neuronPool, size, parents, genes) {
+    constructor(neuronPool, size, useRandomNeuronConnections, parents, genes) {
         super();
         this.parents = parents;
         this.size = size;
+        this.useRandomNeuronConnections = useRandomNeuronConnections;
         this.neurons = neuronPool;
         this.connectionMethods = [];
         this.limits = Array.from(new Array(this.neurons.getNeuronLevelsNum?.()).keys()).map((el, idx) => {
@@ -29,26 +31,46 @@ class Genes extends Array {
         this.setFingerprint()
     }
     init(){
-        if (this.parents.length < 2) {
+        if (this.parents.length < 2 || !this.useRandomNeuronConnections) {
             this.generateGenes();
             return;
         }
-        for (let i = 0; i < this.size; i++) {
-            if (Genes.mutationFactor > 0 && Math.round(Math.random() * (Genes.mutationFactor + 1)) === Genes.mutationFactor) {
-                this.createGene();
-                continue;
+        if(this.useRandomNeuronConnections){
+            for (let i = 0; i < this.size; i++) {
+                if (Genes.mutationFactor > 0 && Math.round(Math.random() * (Genes.mutationFactor + 1)) === Genes.mutationFactor) {
+                    this.createGene();
+                    continue;
+                }
+                if(!this.parents[0][i] || !this.parents[1][i]){
+                    this.createGene();
+                    continue;
+                }
+                this.push(this.parents[Math.round(Math.random())][i])
             }
-            if(!this.parents[0][i] || !this.parents[1][i]){
-                this.createGene();
-                continue;
-            }
-            this.push(this.parents[Math.round(Math.random())][i])
+        } else {
+            let cursor = 0
+            this.connectionMethods.forEach((levels, idx) => {
+                for(let i = 0; i <= this.limits[levels[0]]; i++){
+                    this.push(this.parents[Math.round(Math.random())][cursor++]);
+                }
+            });
         }
     }
 
     generateGenes() {
-        for(let i = 0; i < this.size; i++){
-            this.createGene();
+        if(this.useRandomNeuronConnections){
+            for(let i = 0; i < this.size; i++){
+                this.createGene();
+            }
+        } else {
+            const maxWeight = (Genes.weightInterval[1] + 1);
+            this.connectionMethods.forEach((levels, idx) => {
+                for(let i = 0; i <= this.limits[levels[0]]; i++){
+                    for(let j = 0; j <= this.limits[levels[1]]; j++){
+                        this.push([i, j, idx, ~~(Math.random() * maxWeight), ~~(Math.random() * maxWeight)])
+                    }
+                }
+            });
         }
     }
 

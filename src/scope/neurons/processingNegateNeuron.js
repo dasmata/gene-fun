@@ -1,3 +1,3 @@
 const processingNegateNeuron = function (agent, input) {
-    return input ? 0 : 1;
+    return 1 - input;
 }

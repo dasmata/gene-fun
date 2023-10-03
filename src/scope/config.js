@@ -4,6 +4,11 @@ const size = {
 };
 const config = {
     size,
+    engineConfig: {
+        updateWorkers: 1,
+        useNeuronWorkers: false,
+        randomNeuronConnections: true
+    },
     levels: [
         // lvl 1
         {
@@ -153,8 +158,8 @@ const config = {
         },
         {
             walls: [
-                [new Vector([60,30], Object.values(size)), new Vector([62,120], Object.values(size))],
-                [new Vector([60,150], Object.values(size)), new Vector([62,230], Object.values(size))],
+                [new Vector([60,0], Object.values(size)), new Vector([62,100], Object.values(size))],
+                [new Vector([60,156], Object.values(size)), new Vector([62,256], Object.values(size))],
                 [new Vector([180,80], Object.values(size)), new Vector([182,170], Object.values(size))],
             ],
             breedingAreas: [
@@ -162,16 +167,15 @@ const config = {
             ],
             spawnAreas: [
                 [
-                    new Vector([0, 30], Object.values(size)),
-                    new Vector([size.width / 8, 120], Object.values(size)),
+                    new Vector([0, 0], Object.values(size)),
+                    new Vector([size.width / 8, 90], Object.values(size)),
                 ],
                 [
-                    new Vector([0, 150], Object.values(size)),
-                    new Vector([size.width / 8, 230], Object.values(size)),
+                    new Vector([0, 170], Object.values(size)),
+                    new Vector([size.width / 8, 256], Object.values(size)),
                 ]
             ]
         },
-        // lvl 6
         {
             walls: [
                 [new Vector([60,30], Object.values(size)), new Vector([62,120], Object.values(size))],

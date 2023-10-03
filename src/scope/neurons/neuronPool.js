@@ -15,8 +15,8 @@ const neuronPool = (() => {
         },
         {
             'mrand': moveRandNeuron.toString(),
-            'ml': moveLeftNeuron.toString(),
             'mr': moveRightNeuron.toString(),
+            'ml': moveLeftNeuron.toString(),
             'mu': moveUpNeuron.toString(),
             'md': moveDownNeuron.toString(),
         },

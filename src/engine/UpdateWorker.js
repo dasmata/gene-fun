@@ -15,6 +15,7 @@ class UpdateWorker extends Observable {
     neuronPool;
     geneNumber;
     lastResults;
+    config;
 
     consecutiveGenerationsEvolving;
 
@@ -23,6 +24,7 @@ class UpdateWorker extends Observable {
         this.lastResults = {};
         this.minActions = data.minActions;
         this.geneNumber = data.geneNumber;
+        this.config = data.config;
         this.consecutiveGenerationsEvolving = 0;
         this.loadDependencies(data.dependencies);
         this.createNeuronPool(data.neurons);
@@ -116,6 +118,7 @@ class UpdateWorker extends Observable {
                 null,
                 this.neuronPool,
                 this.geneNumber,
+                this.config.randomNeuronConnections,
                 parents,
                 (movements, currentActionValue, agentId) => {
                     this.notify({

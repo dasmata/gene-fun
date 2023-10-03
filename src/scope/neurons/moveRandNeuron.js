@@ -1,5 +1,5 @@
 const moveRandNeuron = function (agent, input) {
-    if (input) {
+    if (Math.round(input)) {
         return 1
     }
     return 0
