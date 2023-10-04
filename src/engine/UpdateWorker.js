@@ -170,16 +170,7 @@ class UpdateWorker extends Observable {
 
     setAggregatedValues(agents) {
         setTimeout(() => {
-            this.supervisor.agents.forEach(agent => {
-                const stringId = Symbol.keyFor(agent.id);
-                const actionValues = agents[stringId];
-                agent.actionValue = actionValues.actionValue;
-                agent.oldActionValue = actionValues.oldActionValue;
-
-                if(actionValues.reward){
-                    agent.applyReward(actionValues.reward, this.lastResults[stringId].results);
-                }
-            });
+            this.setAgentsActionValues(agents)
             this.supervisor.play();
         }, 0)
     }
@@ -209,6 +200,19 @@ class UpdateWorker extends Observable {
         if (this.supervisor) {
             this.supervisor.actionsNr = val;
         }
+    }
+
+    setAgentsActionValues(agents) {
+        this.supervisor.agents.forEach(agent => {
+            const stringId = Symbol.keyFor(agent.id);
+            const actionValues = agents[stringId];
+            agent.actionValue = actionValues.actionValue;
+            agent.oldActionValue = actionValues.oldActionValue;
+
+            if(actionValues.reward){
+                agent.applyReward(actionValues.reward, this.lastResults[stringId].results);
+            }
+        });
     }
 }
 

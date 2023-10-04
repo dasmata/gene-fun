@@ -12,7 +12,6 @@ class StatsRenderer {
         this.statsValueTpl = this.statsElement.querySelector('.stats-row');
         this.statsElement.removeChild(this.statsValueTpl);
         this.wrapper = wrapper;
-        EventBus.subscribe('stopRender', this.clear.bind(this));
     }
 
     render(generationStats){
@@ -24,6 +23,7 @@ class StatsRenderer {
         }
         this.genMarkerElement.textContent = this.generationsNr;
         this.generationsNr++;
+        this.unsubscribeStopRender = EventBus.subscribe('stopRender', this.clear.bind(this));
     }
 
     renderGenerationStats(stats){
@@ -55,5 +55,6 @@ class StatsRenderer {
         });
         this.wrapper.removeChild(this.statsElement);
         this.currentElements = [];
+        this.unsubscribeStopRender?.();
     }
 }

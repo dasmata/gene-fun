@@ -22,11 +22,11 @@ class AgentDetailsRenderer {
         }, []);
         this.agentTemplate = document.getElementById('agent');
         this.lvlTpl = document.getElementById('level');
-        EventBus.subscribe('stopRender', this.clear.bind(this));
     }
 
     clear() {
         this.destroyDetails();
+        this.unsubscribeStopRender?.();
     }
 
     destroyDetails() {
@@ -83,7 +83,7 @@ class AgentDetailsRenderer {
             return;
         }
         this.generateNeuronConnectionsFromGenes(agent.genes.data);
-
+        this.unsubscribeStopRender = EventBus.subscribe('stopRender', this.clear.bind(this));
         this.destroyDetails();
         this.clearHandler = this.clearHandlerGenerator(agent);
         this.computeClickHandler = this.computeClickHandleGenerator(agent);

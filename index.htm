@@ -279,6 +279,9 @@
             }
             if(this.status === STATUS_INITIALIZED){
                 this.startRendering();
+                this.sendRpc([], 'setAgentsActionValues', [this.map.toJSON().agents], () => {
+                    console.log('Agents set on map');
+                })
             }
         }
 
@@ -292,20 +295,26 @@
 
         sendRpc(path, method, params, callback) {
             const id = `${Math.random().toString(36).substring(2,7)}-${Math.random().toString(36).substring(2,7)}-${Math.random().toString(36).substring(2,7)}`;
-            this.updateWorker?.postMessage({
-                type: 'rpc',
-                payload: {
-                    ctxPath: path,
-                    method: method,
-                    params: params,
-                    reqId: id
-                }
-            }) && this.rpcCallbacks.set(id, callback || (() => {}));
+            try {
+                this.updateWorker?.postMessage({
+                    type: 'rpc',
+                    payload: {
+                        ctxPath: path,
+                        method: method,
+                        params: params,
+                        reqId: id
+                    }
+                })
+                this.rpcCallbacks.set(id, callback || (() => {}));
+            } catch (e) {
+                console.error(e);
+            }
             return id;
         }
 
         handleNeuronCreated(e) {
             const neuron = e.data.payload;
+            console.log(neuron.id, ': ', neuron.type);
             this.neuronTypes[neuron.id] = {...neuron};
             this.sendNeuronContext(neuron.type);
         }
@@ -387,6 +396,9 @@
 
         stopRendering(){
             EventBus.publish('stopRender');
+            this.mapRenderer = null;
+            this.detailsRenderer = null;
+            this.statsRenderer = null;
         }
 
         actionAggregator(results, currentActionValue, neuronTypes) {
