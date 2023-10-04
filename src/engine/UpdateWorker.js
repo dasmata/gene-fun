@@ -33,37 +33,38 @@ class UpdateWorker extends Observable {
         this.createSupervisor(population);
         this.notify({
             type: 'ready',
-            payload: null
+            payload: {
+                requestId: data.requestId
+            }
         })
     }
 
-    importAgents(agents) {
+    importAgents({ agents, requestId }) {
         const population = this.populationFactory(agents.length);
         const agentFactory = this.getAgentFactory();
         agents.forEach(agent => {
-            population.add(agentFactory(null, agent.genes.data));
+            population.add(agentFactory(null, agent.genes.data, true));
         });
         this.supervisor.agents = population;
         this.notify({
             type: 'ready',
-            payload: null
+            payload: {
+                requestId
+            }
         });
     }
 
-    createDescendants(parents){
-        const newAgents = this.populationFactory();
-        const parentAgents = this.supervisor.agents.find(agent => {
-            return parents.find(parent => parent.id === Symbol.keyFor(agent.id))
-        });
+    createDescendants({ parents, size }){
+        const newAgents = this.populationFactory(size);
         if (parents.length > 0) {
-            parentAgents.replicate(this.populationSize, newAgents);
+            newAgents.replicate(size, parents);
         } else {
             newAgents.init();
         }
         this.supervisor.setAgents(newAgents);
         this.notify({
-            type: 'ready',
-            payload: null
+            type: 'descendantsCreated',
+            payload: newAgents.toJSON()
         });
     }
 
@@ -76,7 +77,7 @@ class UpdateWorker extends Observable {
     createNeuronPool(neurons){
         const lvlIdx = [];
         this.neuronPool = Object.keys(neurons).reduce((acc, neuronType) => {
-            acc[neuronType] = new self[neurons[neuronType][0]]({}, neuronType, new Function(`return ${neurons[neuronType][1]}`)());
+            acc[neuronType] = new self[neurons[neuronType][0]]({}, neuronType, new Function(`return ${neurons[neuronType][1]}`)(), neurons[neuronType][3]);
             lvlIdx[neurons[neuronType][2]] = lvlIdx[neurons[neuronType][2]] || [];
             lvlIdx[neurons[neuronType][2]].push(neuronType);
             this.notify({
@@ -113,7 +114,7 @@ class UpdateWorker extends Observable {
     }
 
     getAgentFactory(){
-        return (parents = [], genes = null) => {
+        return (parents = [], genes = null, id) => {
             const agent = new Agent(
                 null,
                 this.neuronPool,
@@ -132,13 +133,16 @@ class UpdateWorker extends Observable {
                         payload: { agent }
                     });
                 },
-                genes
+                genes,
+                id
             );
             agent.attach(this)
-            this.notify({
-                type: 'agentCreated',
-                payload: agent.toJSON()
-            })
+            if(!id){
+                this.notify({
+                    type: 'agentCreated',
+                    payload: agent.toJSON()
+                })
+            }
             return agent;
         }
     }
@@ -204,6 +208,7 @@ class UpdateWorker extends Observable {
 
     setAgentsActionValues(agents) {
         this.supervisor.agents.forEach(agent => {
+            console.log(agents);
             const stringId = Symbol.keyFor(agent.id);
             const actionValues = agents[stringId];
             agent.actionValue = actionValues.actionValue;

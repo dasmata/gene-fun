@@ -29,7 +29,7 @@ class Brain extends Observable {
             weightSum += weights[idx]
             return acc + (el * weights[idx]);
         }, 0);
-        return weightSum <= 2 ? 0 : weightedInputs / weightSum;
+        return weightSum === 0 ? 0 : weightedInputs / weightSum;
     }
 
     compute() {
@@ -88,14 +88,16 @@ class Brain extends Observable {
                 calculatedReward = reward * -1
             }
 
-            rewardsToApply.push([neuron.id, calculatedReward < -8 ? -8 : (calculatedReward > 8 ? 8 : calculatedReward)]);
+            rewardsToApply.push([
+                neuron.id,
+                Math.min(Math.max(Genes.weightInterval[0], calculatedReward), Genes.weightInterval[1])
+            ]);
         })
 
         rewardsToApply.forEach(el => {
             this.updateConnectionsWeight(
                 el[0],
-                // this seems to be very important for some reason. can't remember WHY it's here tho
-                found ? el[1] : el[1]  * Math.round((Math.random() * 2) - 1)
+                el[1]
             )
         });
         return this.connections;

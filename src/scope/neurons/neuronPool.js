@@ -14,11 +14,11 @@ const neuronPool = (() => {
             'pv2': processingVoidNeuron.toString(),
         },
         {
-            'mrand': moveRandNeuron.toString(),
-            'mr': moveRightNeuron.toString(),
-            'ml': moveLeftNeuron.toString(),
-            'mu': moveUpNeuron.toString(),
-            'md': moveDownNeuron.toString(),
+            'mrand': moveActivationFunction.toString(),
+            'mr': moveActivationFunction.toString(),
+            'ml': moveActivationFunction.toString(),
+            'mu': moveActivationFunction.toString(),
+            'md': moveActivationFunction.toString(),
         },
     ]
     return (world) => {
@@ -35,7 +35,7 @@ const neuronPool = (() => {
                     className = neuronFunc[1]
                     neuronFunc = neuronFunc[0];
                 }
-                acc[type] = [className, neuronFunc, idx]
+                acc[type] = [className, neuronFunc, idx, type]
             })
             return acc;
         }, {});
