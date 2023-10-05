@@ -24,11 +24,11 @@ const WorkerMessageBus = function(workers) {
                 return;
             }
             const msgId = msg.data.payload.requestId;
-            this.buffers[msgId] = this.buffers[msgId] || [];
-            this.buffers[msgId][this.workers.indexOf(msg.target)] = msg.data;
-            if(this.buffers[msgId].filter(el => el !== undefined).length === this.receiverNum[msgId]){
-                this.subscribers[msg.data.type]?.forEach(clbk => clbk(this.buffers[msgId]));
-                delete this.buffers[msgId];
+            this.buffers[msg.data.payload.requestId] = this.buffers[msg.data.payload.requestId] || [];
+            this.buffers[msg.data.payload.requestId][this.workers.indexOf(msg.target)] = msg.data;
+            if(this.buffers[msg.data.payload.requestId].length === this.workers.length && !this.buffers[msg.data.payload.requestId].includes(undefined)){
+                this.subscribers[msg.data.type]?.forEach(clbk => clbk(this.buffers[msg.data.payload.requestId]));
+                delete this.buffers[msg.data.payload.requestId];
                 delete this.receiverNum[msgId];
             }
         }
