@@ -10,7 +10,6 @@ class MapRenderer extends Observable{
         super();
         this.map = map;
         this.frameRenderer = this.renderMap.bind(this);
-        EventBus.subscribe('stopRender', this.clear.bind(this));
     }
 
     handleClick = (e) => {
@@ -46,7 +45,7 @@ class MapRenderer extends Observable{
         if (!this.map) {
            return;
         }
-
+        this.unsubscribeStopRender = EventBus.subscribe('stopRender', this.clear.bind(this));
         this.renderAreas();
         this.renderMap();
     }
@@ -96,5 +95,6 @@ class MapRenderer extends Observable{
         window.cancelAnimationFrame(this.animationFrameRequest);
         this.areaRenderer.clear();
         this.destroyContainer();
+        this.unsubscribeStopRender?.();
     }
 }

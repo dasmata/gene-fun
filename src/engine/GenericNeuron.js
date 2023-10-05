@@ -4,10 +4,10 @@ class GenericNeuron {
     id = null;
     process = () => {}
 
-    constructor(world, type, neuronFunction){
+    constructor(world, type, neuronFunction, id){
         this.world = world;
         this.type = type;
-        this.id = Math.random().toString(36).substring(2,7);
+        this.id = id || Math.random().toString(36).substring(2,7);
         this.process = neuronFunction.bind(this);
     }
 

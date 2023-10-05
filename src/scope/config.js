@@ -5,7 +5,7 @@ const size = {
 const config = {
     size,
     engineConfig: {
-        updateWorkers: 1,
+        workers: 0.8,
         useNeuronWorkers: false,
         randomNeuronConnections: true
     },

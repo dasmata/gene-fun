@@ -25,11 +25,7 @@
     <script src="src/scope/neurons/seeUpNeuron.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/seeDownNeuron.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/senseRandomNeuron.js" type="text/javascript" ></script>
-    <script src="src/scope/neurons/moveRandNeuron.js" type="text/javascript" ></script>
-    <script src="src/scope/neurons/moveLeftNeuron.js" type="text/javascript" ></script>
-    <script src="src/scope/neurons/moveRightNeuron.js" type="text/javascript" ></script>
-    <script src="src/scope/neurons/moveUpNeuron.js" type="text/javascript" ></script>
-    <script src="src/scope/neurons/moveDownNeuron.js" type="text/javascript" ></script>
+    <script src="src/scope/neurons/moveActivationFunction.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/processingNegateNeuron.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/processingVoidNeuron.js" type="text/javascript" ></script>
     <script src="src/scope/neurons/neuronPool.js" type="text/javascript" ></script>
@@ -124,6 +120,8 @@
 </template>
 
 <script>
+    let startMark = null
+    let endMark = null;
     const lastLevelNeurons = {
         mr : () => [Board.agentSize, 0],
         ml: () => [-1 * Board.agentSize, 0],
@@ -222,11 +220,12 @@
         }
 
         playHandler(){
+            startMark = performance.mark('aaa');
             this.status = STATUS_RUNNING;
             this.updateWorker.postMessage({
                 type: 'setAggregatedValues',
                 payload: this.map.toJSON()
-            })
+            });
         }
 
         pauseHandler(){
@@ -236,7 +235,7 @@
         createHandler(){
             this.createMap();
             this.status = STATUS_INITIALIZED;
-            this.updateWorker = new Worker('src/engine/UpdateWorker.js', {name: 'updateWorker'});
+            this.updateWorker = new Worker('src/engine/WorkerMaster.js', {name: 'updateWorker'});
             this.updateWorker.addEventListener('message', this.update);
             this.updateWorker.postMessage({
                 type: 'init',
@@ -279,6 +278,9 @@
             }
             if(this.status === STATUS_INITIALIZED){
                 this.startRendering();
+                this.sendRpc([], 'setAgentsActionValues', [this.map.toJSON().agents], () => {
+                    console.log('Agents set on map');
+                })
             }
         }
 
@@ -286,28 +288,34 @@
             this.renderAgentDetails(agent);
         }
 
-        sendNeuronContext(type){
-            this.sendRpc(['neuronPool', type], 'setContext', [this.initialMapData]);
+        sendNeuronContext(type, msgId){
+            this.sendRpc(['neuronPool', type], 'setContext', [this.initialMapData], null, msgId);
         }
 
-        sendRpc(path, method, params, callback) {
+        sendRpc(path, method, params, callback, threadIdentifier) {
             const id = `${Math.random().toString(36).substring(2,7)}-${Math.random().toString(36).substring(2,7)}-${Math.random().toString(36).substring(2,7)}`;
-            this.updateWorker?.postMessage({
-                type: 'rpc',
-                payload: {
-                    ctxPath: path,
-                    method: method,
-                    params: params,
-                    reqId: id
-                }
-            }) && this.rpcCallbacks.set(id, callback || (() => {}));
+            try {
+                this.updateWorker?.postMessage({
+                    type: 'rpc',
+                    payload: {
+                        ctxPath: path,
+                        method: method,
+                        params: params,
+                        rpcId: id
+                    },
+                    reqId: threadIdentifier
+                })
+                this.rpcCallbacks.set(id, callback || (() => {}));
+            } catch (e) {
+                console.error(e);
+            }
             return id;
         }
 
         handleNeuronCreated(e) {
             const neuron = e.data.payload;
             this.neuronTypes[neuron.id] = {...neuron};
-            this.sendNeuronContext(neuron.type);
+            this.sendNeuronContext(neuron.type, e.data.msgId);
         }
 
         handleComputed(e){
@@ -352,6 +360,10 @@
                     return;
                 }
             }
+            this.map.population = [];
+
+            endMark = performance.mark('aaa');
+            console.log(endMark.startTime - startMark.startTime);
             this.updateWorker.postMessage({
                 type: 'createDescendants',
                 payload: JSON.parse(JSON.stringify(replicators))
@@ -387,6 +399,9 @@
 
         stopRendering(){
             EventBus.publish('stopRender');
+            this.mapRenderer = null;
+            this.detailsRenderer = null;
+            this.statsRenderer = null;
         }
 
         actionAggregator(results, currentActionValue, neuronTypes) {
@@ -479,8 +494,8 @@
         }
 
         rpcResponse(e) {
-            if (this.rpcCallbacks.has(e.data.payload.reqId)) {
-                this.rpcCallbacks.get(e.data.payload.reqId)(e.data.payload.response);
+            if (this.rpcCallbacks.has(e.data.payload.rpcId)) {
+                this.rpcCallbacks.get(e.data.payload.rpcId)(e.data.payload.response);
             }
         }
 
@@ -508,7 +523,7 @@
 
     }
 
-    const page = new Page(config);
+    var page = new Page(config);
 </script>
 </body>
 </html>
