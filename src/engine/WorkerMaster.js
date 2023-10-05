@@ -7,6 +7,7 @@ class WorkerMaster {
     workers;
     messageBus;
     clientMessages;
+    unsubComputed;
 
     agentsIdx;
 
@@ -18,7 +19,7 @@ class WorkerMaster {
     }
 
     init({ payload }){
-        const workersNum = 1;//~~(navigator.hardwareConcurrency * payload.config.workers);
+        const workersNum = ~~(navigator.hardwareConcurrency * payload.config.workers);
         for(let i = 0; i < workersNum; i++){
             this.workers[i] = new Worker('UpdateWorker.js');
         }
@@ -74,6 +75,8 @@ class WorkerMaster {
 
         const unsubDescendantsCreated = this.messageBus.subscribe('descendantsCreated', e => {
             unsubDescendantsCreated();
+            // last setAggregated is sent when the generation is dead so a computed listener remains hangging
+            this.unsubComputed?.();
             unsubAgentCreated = this.messageBus.subscribe('agentCreated', (msg) => {
                 this.agentsIdx[msg.data.payload.id] = this.workers.indexOf(msg.target);
                 this.clientMessenger.send(msg.data);
@@ -122,10 +125,10 @@ class WorkerMaster {
 
     setAggregatedValues(data){
         const computedValues = [];
-        const unsubComputed = this.messageBus.subscribe('computed', msg => {
-            unsubComputed();
+        this.unsubComputed = this.messageBus.subscribe('computed', msg => {
             computedValues[this.workers.indexOf(msg.target)] = msg.data.payload
             if(computedValues.length === this.workers.length && !computedValues.includes(undefined)){
+                this.unsubComputed?.();
                 this.clientMessenger.send({
                     type: 'computed',
                     payload: Object.assign(...computedValues)

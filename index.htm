@@ -316,7 +316,6 @@
         }
 
         handleComputed(e){
-            console.count('computed');
             const computeResults = e.data.payload;
             if(this.selectedAgent.id){
                 this.detailsRenderer.update(computeResults[this.selectedAgent.id])
