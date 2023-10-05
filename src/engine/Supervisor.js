@@ -20,8 +20,11 @@ class Supervisor extends Observable {
 
     resetFrames() {
         this.frameGenerator = (function* (actionsNr){
-            for(let i = 0; i < actionsNr; i++){
-                yield i;
+            for(let i = 1; i <= actionsNr; i++){
+                yield {
+                    nr: i,
+                    hasNext: i !== actionsNr
+                };
             }
         })(this.actionsNr)
     }
@@ -43,12 +46,13 @@ class Supervisor extends Observable {
 
     play() {
         this.status = 1;
-        const frameNr = this.frameGenerator.next();
-        if (!frameNr.done) {
-            this.frame(frameNr);
-            return;
+        const frame = this.frameGenerator.next();
+        if (!frame.done) {
+            this.frame(frame.value.nr);
+            if (!frame.value.hasNext) {
+                this.armageddon();
+            }
         }
-        this.armageddon();
     }
 
     pause() {

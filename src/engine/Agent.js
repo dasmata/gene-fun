@@ -20,8 +20,7 @@ class Agent extends Observable {
         parents = [],
         actionsAggregator,
         rewardFunction,
-        genes,
-        id
+        genes
     ){
         super();
         this.actionValue = actionValue;
@@ -33,7 +32,7 @@ class Agent extends Observable {
         this.initBrain(rewardFunction);
         this.actionsAggregator = actionsAggregator;
 
-        this.id = Symbol.for(id || `${this.genes.fingerprint}|${Math.random().toString(36).substring(2,7)}`)
+        this.id = Symbol.for(`${this.genes.fingerprint}|${Math.random().toString(36).substring(2,7)}`)
     }
 
     initBrain(rewardFunction) {

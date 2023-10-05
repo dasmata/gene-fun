@@ -316,6 +316,7 @@
         }
 
         handleComputed(e){
+            console.count('computed');
             const computeResults = e.data.payload;
             if(this.selectedAgent.id){
                 this.detailsRenderer.update(computeResults[this.selectedAgent.id])
@@ -357,7 +358,7 @@
                     return;
                 }
             }
-            this.population = [];
+            this.map.population = [];
             this.updateWorker.postMessage({
                 type: 'createDescendants',
                 payload: JSON.parse(JSON.stringify(replicators))
@@ -517,7 +518,7 @@
 
     }
 
-    const page = new Page(config);
+    var page = new Page(config);
 </script>
 </body>
 </html>

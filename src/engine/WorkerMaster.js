@@ -70,31 +70,32 @@ class WorkerMaster {
     createDescendants({ payload }) {
         this.agentsIdx = {};
         let importRequestId = null;
-        const unsubAgentCreated = this.messageBus.subscribe('agentCreated', (msg) => {
-            this.agentsIdx[msg.data.payload.id] = this.workers.indexOf(msg.target);
-            this.clientMessenger.send(msg.data);
+        let unsubAgentCreated;
+
+        const unsubDescendantsCreated = this.messageBus.subscribe('descendantsCreated', e => {
+            unsubDescendantsCreated();
+            unsubAgentCreated = this.messageBus.subscribe('agentCreated', (msg) => {
+                this.agentsIdx[msg.data.payload.id] = this.workers.indexOf(msg.target);
+                this.clientMessenger.send(msg.data);
+            });
+            const perWorker = Math.ceil(e.data.payload.length / this.workers.length);
+            this.workers.forEach((worker, idx) => {
+                importRequestId = this.messageBus.publish(
+                    'importAgents',
+                    { agents: e.data.payload.slice(idx * perWorker, (idx + 1) * perWorker) },
+                    worker,
+                    importRequestId
+                )
+            });
         });
-            const unsubDescendantsCreated = this.messageBus.subscribe('descendantsCreated', e => {
-                unsubDescendantsCreated();
-                const perWorker = Math.ceil(e.data.payload.length / this.workers.length);
-                console.log(perWorker)
-                this.workers.forEach((worker, idx) => {
-                    importRequestId = this.messageBus.publish(
-                        'importAgents',
-                        { agents: e.data.payload.slice(idx * perWorker, (idx + 1) * perWorker) },
-                        worker,
-                        importRequestId
-                    )
-                });
+        const unsubAllAgentsReady = this.messageBus.subscribe('ready', (data) => {
+            unsubAllAgentsReady()
+            unsubAgentCreated();
+            this.clientMessenger.send({
+                type: 'ready',
+                payload: null
             });
-            debugger;
-            const unsubAllAgentsReady = this.messageBus.subscribe('ready', (data) => {
-                unsubAllAgentsReady()
-                this.clientMessenger.send({
-                    type: 'ready',
-                    payload: null
-                });
-            });
+        });
 
 
         this.messageBus.publish('createDescendants', {
@@ -122,13 +123,13 @@ class WorkerMaster {
     setAggregatedValues(data){
         const computedValues = [];
         const unsubComputed = this.messageBus.subscribe('computed', msg => {
+            unsubComputed();
             computedValues[this.workers.indexOf(msg.target)] = msg.data.payload
             if(computedValues.length === this.workers.length && !computedValues.includes(undefined)){
                 this.clientMessenger.send({
                     type: 'computed',
                     payload: Object.assign(...computedValues)
                 });
-                unsubComputed();
             }
         });
 
@@ -173,23 +174,23 @@ class WorkerMaster {
 
 const master = new WorkerMaster();
 
-self.onmessage = (e) => {
-    return;
-    switch(e.data.type){
-        case 'init':
-            master.init(e.data);
-            break;
-        case 'rpc':
-            master.rpc(e.data)
-            break;
-        case 'setAggregatedValues':
-            master.setAggregatedValues(e.data);
-            break;
-        case 'createDescendants':
-            // worker.createDescendants(e.data.payload);
-            break;
-        case 'importAgents':
-            // worker.importAgents(e.data.payload);
-            break;
-    }
-}
+// self.onmessage = (e) => {
+//     return;
+//     switch(e.data.type){
+//         case 'init':
+//             master.init(e.data);
+//             break;
+//         case 'rpc':
+//             master.rpc(e.data)
+//             break;
+//         case 'setAggregatedValues':
+//             master.setAggregatedValues(e.data);
+//             break;
+//         case 'createDescendants':
+//             worker.createDescendants(e.data.payload);
+            // break;
+        // case 'importAgents':
+        //     worker.importAgents(e.data.payload);
+            // break;
+    // }
+// }

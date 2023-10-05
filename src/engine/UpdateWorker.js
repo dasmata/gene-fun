@@ -43,9 +43,9 @@ class UpdateWorker extends Observable {
         const population = this.populationFactory(agents.length);
         const agentFactory = this.getAgentFactory();
         agents.forEach(agent => {
-            population.add(agentFactory(null, agent.genes.data, true));
+            population.add(agentFactory(null, agent.genes.data));
         });
-        this.supervisor.agents = population;
+        this.supervisor.setAgents(population);
         this.notify({
             type: 'ready',
             payload: {
@@ -61,7 +61,6 @@ class UpdateWorker extends Observable {
         } else {
             newAgents.init();
         }
-        this.supervisor.setAgents(newAgents);
         this.notify({
             type: 'descendantsCreated',
             payload: newAgents.toJSON()
@@ -137,12 +136,10 @@ class UpdateWorker extends Observable {
                 id
             );
             agent.attach(this)
-            if(!id){
-                this.notify({
-                    type: 'agentCreated',
-                    payload: agent.toJSON()
-                })
-            }
+            this.notify({
+                type: 'agentCreated',
+                payload: agent.toJSON()
+            });
             return agent;
         }
     }
@@ -208,9 +205,11 @@ class UpdateWorker extends Observable {
 
     setAgentsActionValues(agents) {
         this.supervisor.agents.forEach(agent => {
-            console.log(agents);
             const stringId = Symbol.keyFor(agent.id);
             const actionValues = agents[stringId];
+            if(!actionValues){
+                debugger;
+            }
             agent.actionValue = actionValues.actionValue;
             agent.oldActionValue = actionValues.oldActionValue;
 
