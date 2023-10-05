@@ -120,6 +120,8 @@
 </template>
 
 <script>
+    let startMark = null
+    let endMark = null;
     const lastLevelNeurons = {
         mr : () => [Board.agentSize, 0],
         ml: () => [-1 * Board.agentSize, 0],
@@ -153,7 +155,7 @@
 
 
     class Page {
-        actions = 100;
+        actions = 1250;
         populationSize = 1000;
         geneNumber = 12;
         survivabilityThreshold = 60;
@@ -218,6 +220,7 @@
         }
 
         playHandler(){
+            startMark = performance.mark('aaa');
             this.status = STATUS_RUNNING;
             this.updateWorker.postMessage({
                 type: 'setAggregatedValues',
@@ -358,6 +361,9 @@
                 }
             }
             this.map.population = [];
+
+            endMark = performance.mark('aaa');
+            console.log(endMark.startTime - startMark.startTime);
             this.updateWorker.postMessage({
                 type: 'createDescendants',
                 payload: JSON.parse(JSON.stringify(replicators))

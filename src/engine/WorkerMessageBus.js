@@ -3,6 +3,7 @@ const WorkerMessageBus = function(workers) {
         workers;
         subscribers;
         msgId;
+        receiverNum;
 
         buffers;
 
@@ -10,6 +11,7 @@ const WorkerMessageBus = function(workers) {
             this.buffers = {};
             this.msgId = 0;
             this.workers = workers;
+            this.receiverNum = {};
             this.subscribers = {};
             this.workers.forEach(worker => {
                 worker.addEventListener('message', msg => this.handleMessages(msg));
@@ -21,12 +23,13 @@ const WorkerMessageBus = function(workers) {
                 this.subscribers[msg.data.type]?.forEach(clbk => clbk(msg));
                 return;
             }
-            this.buffers[msg.data.payload.requestId] = this.buffers[msg.data.payload.requestId] || [];
-            this.buffers[msg.data.payload.requestId][this.workers.indexOf(msg.target)] = msg.data;
-
-            if(this.buffers[msg.data.payload.requestId].length === this.workers.length && !this.buffers[msg.data.payload.requestId].includes(undefined)){
-                this.subscribers[msg.data.type]?.forEach(clbk => clbk(this.buffers[msg.data.payload.requestId]));
-                delete this.buffers[msg.data.payload.requestId];
+            const msgId = msg.data.payload.requestId;
+            this.buffers[msgId] = this.buffers[msgId] || [];
+            this.buffers[msgId][this.workers.indexOf(msg.target)] = msg.data;
+            if(this.buffers[msgId].filter(el => el !== undefined).length === this.receiverNum[msgId]){
+                this.subscribers[msg.data.type]?.forEach(clbk => clbk(this.buffers[msgId]));
+                delete this.buffers[msgId];
+                delete this.receiverNum[msgId];
             }
         }
 
@@ -48,8 +51,10 @@ const WorkerMessageBus = function(workers) {
                 }
             };
             if (target) {
+                this.receiverNum[requestId] = 1;
                 target.postMessage(message);
             } else {
+                this.receiverNum[requestId] = this.workers.length;
                 this.workers.forEach(worker => worker.postMessage(message));
             }
             return requestId;

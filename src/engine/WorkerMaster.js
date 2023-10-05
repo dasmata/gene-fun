@@ -159,9 +159,21 @@ class WorkerMaster {
                     params: [workerAgents]
                 }, this.workers[idx])
             });
-            return;
         }
 
+    }
+
+    testRunNeurons(data){
+        const agentId = data.payload.params[0];
+        if(typeof this.agentsIdx[agentId] === 'undefined'){
+            throw new Error('Agent was not found in the worker index');
+        }
+        const workerIdx = this.agentsIdx[agentId];
+        const unsubResponse = this.messageBus.subscribe('rpcResponse', (data) => {
+            unsubResponse();
+            this.clientMessenger.send(data[workerIdx]);
+        });
+        this.messageBus.publish(data.type, data.payload, this.workers[this.agentsIdx[agentId]]);
     }
 
     rpc(data){
@@ -170,30 +182,13 @@ class WorkerMaster {
             return;
         }
         if(data.payload.ctxPath.length === 0){
-            this[data.payload.method]?.(data);
+            if(this[data.payload.method]){
+                this[data.payload.method](data);
+            } else {
+                this.messageBus.publish(data.type, data.payload)
+            }
         }
     }
 }
 
 const master = new WorkerMaster();
-
-// self.onmessage = (e) => {
-//     return;
-//     switch(e.data.type){
-//         case 'init':
-//             master.init(e.data);
-//             break;
-//         case 'rpc':
-//             master.rpc(e.data)
-//             break;
-//         case 'setAggregatedValues':
-//             master.setAggregatedValues(e.data);
-//             break;
-//         case 'createDescendants':
-//             worker.createDescendants(e.data.payload);
-            // break;
-        // case 'importAgents':
-        //     worker.importAgents(e.data.payload);
-            // break;
-    // }
-// }
