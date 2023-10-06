@@ -8,6 +8,7 @@ class WorkerMaster {
     messageBus;
     clientMessages;
     unsubComputed;
+    config;
 
     agentsIdx;
 
@@ -19,7 +20,8 @@ class WorkerMaster {
     }
 
     init({ payload }){
-        const workersNum = ~~(navigator.hardwareConcurrency * payload.config.workers);
+        const maxWorkers = ~~(navigator.hardwareConcurrency * payload.config.workers);
+        const workersNum = payload.populationSize < maxWorkers ? payload.populationSize : maxWorkers;
         for(let i = 0; i < workersNum; i++){
             this.workers[i] = new Worker('UpdateWorker.js');
         }
@@ -47,6 +49,7 @@ class WorkerMaster {
                 payload: null
             })
         });
+        this.config = payload;
         this.messageBus.publish('init', {
             ...payload,
             populationSize: payload.populationSize / workersNum
@@ -100,10 +103,9 @@ class WorkerMaster {
             });
         });
 
-
         this.messageBus.publish('createDescendants', {
             parents: payload,
-            size: 1000
+            size: this.config.populationSize
         }, this.workers[Math.round(Math.random() * this.workers.length)]);
     }
 
@@ -179,6 +181,7 @@ class WorkerMaster {
     rpc(data){
         if(data.reqId) {
             this.messageBus.publish(data.type, data.payload, this.clientMessages[data.reqId]?.initiator);
+            delete this.clientMessages[data.reqId];
             return;
         }
         if(data.payload.ctxPath.length === 0){

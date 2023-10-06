@@ -9,12 +9,20 @@ const neuronPool = (() => {
             'sd': [seeDownNeuron.toString(), 'VisionNeuron'],
         },
         {
-            'pn': processingNegateNeuron.toString(),
-            'pv': processingVoidNeuron.toString(),
+            'pv1': processingVoidNeuron.toString(),
             'pv2': processingVoidNeuron.toString(),
+            'pv3': processingVoidNeuron.toString(),
+            'pv4': processingVoidNeuron.toString(),
         },
         {
-            'mrand': moveActivationFunction.toString(),
+            'pv5': processingVoidNeuron.toString(),
+            'pv6': processingVoidNeuron.toString(),
+            'pv7': processingVoidNeuron.toString(),
+            'pv8': processingVoidNeuron.toString(),
+            'pv9': processingVoidNeuron.toString(),
+        },
+        {
+            // 'mrand': moveActivationFunction.toString(),
             'mr': moveActivationFunction.toString(),
             'ml': moveActivationFunction.toString(),
             'mu': moveActivationFunction.toString(),

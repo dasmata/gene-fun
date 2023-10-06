@@ -4,7 +4,7 @@ const seeRightNeuron = function (agent) {
         if (agent.actionValue[0] + this.sightRange >= area[0][0]
             && agent.actionValue[1] > area[0][1]
             && agent.actionValue[1] < area[1][1]) {
-            return 1;
+            return this.sightRange - (agent.actionValue[0] - area[0][0]);
         }
     }
     return 0;

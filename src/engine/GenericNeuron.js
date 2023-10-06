@@ -11,8 +11,8 @@ class GenericNeuron {
         this.process = neuronFunction.bind(this);
     }
 
-    main(agent, input) {
-        return this.process(agent, input)
+     main(agent, input) {
+        return this.process(agent, input);
     }
 }
 ( self || {} ).GenericNeuron = GenericNeuron;

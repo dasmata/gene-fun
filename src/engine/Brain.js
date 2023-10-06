@@ -75,14 +75,14 @@ class Brain extends Observable {
 
     evaluate(result, reward) {
         const rewardsToApply = [];
-        let found = false;
+        let found = 0;
         this.levels[this.levels.length - 1].forEach(neuron => {
             if (!result[neuron.id]) {
                 return true;
             }
             let calculatedReward = null;
             if(result[neuron.id].val){
-                found = true;
+                found++;
                 calculatedReward = reward;
             } else {
                 calculatedReward = reward * -1
@@ -97,7 +97,7 @@ class Brain extends Observable {
         rewardsToApply.forEach(el => {
             this.updateConnectionsWeight(
                 el[0],
-                el[1]
+                found === rewardsToApply.length ? (Math.round(Math.random()) ? 1 : -1) * el[1] : el[1]
             )
         });
         return this.connections;

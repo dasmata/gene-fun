@@ -157,7 +157,7 @@
     class Page {
         actions = 1250;
         populationSize = 1000;
-        geneNumber = 12;
+        geneNumber = 17;
         survivabilityThreshold = 60;
         level = 0;
 
@@ -327,7 +327,7 @@
                 const actionResult = this.actionAggregator(entry.results, entry.agent, this.neuronTypes);
                 actionResult.reward = this.getActionReward(actionResult);
                 return actionResult;
-            })
+            });
             this.map.setPopulation(results);
             if(this.status === STATUS_RUNNING){
                 this.updateWorker.postMessage({
@@ -432,7 +432,7 @@
             if((
                 agent.actionValue[0] === agent.oldActionValue[0] && agent.actionValue[0] === agent.oldActionValue[0])
             ) {
-                return Math.round(Math.random());
+                return Math.round(Math.random() * 5) * (Math.round(Math.random()) === 0 ? 1 : -1);
             }
             return Math.max(...this.map.breedingAreas.map(area => {
                 const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
