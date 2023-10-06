@@ -10,10 +10,12 @@ class PageRenderer {
     actionsSlider;
     genesSlider;
     survivabilitySlider;
+    page;
 
     fileUploader;
 
-    constructor(){
+    constructor(page){
+        this.page = page;
         this.createBtn = document.getElementById('start');
         this.killBtn = document.getElementById('killSw');
         this.pauseBtn = document.getElementById('pause');
@@ -49,11 +51,11 @@ class PageRenderer {
 
     setInitialParams(){
         this.levelIndicator.value = 0;
-        this.actionsSlider.value = 1250;
+        this.actionsSlider.value = this.page.actions;
         this.actionsSlider.nextElementSibling.value = this.actionsSlider.value;
-        this.genesSlider.value = 12;
+        this.genesSlider.value = this.page.geneNumber;
         this.genesSlider.nextElementSibling.value = this.genesSlider.value;
-        this.survivabilitySlider.value = 60;
+        this.survivabilitySlider.value = this.page.survivabilityThreshold;
         this.survivabilitySlider.nextElementSibling.value = this.survivabilitySlider.value;
         EventBus.subscribe('paramChange', e => {
            switch(e.name){

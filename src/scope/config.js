@@ -12,7 +12,8 @@ const config = {
     levels: [
         // lvl 1
         {
-            walls: [],
+            walls: [
+            ],
             breedingAreas: [
                 [
                     new Vector([0, 0], Object.values(size)),
