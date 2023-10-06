@@ -130,6 +130,10 @@
         mrand: () => [
             Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1),
             Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1)
+        ],
+        mrand2: () => [
+            Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1),
+            Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1)
         ]
     };
     const STATUS_PAUSED = 0;
@@ -157,7 +161,7 @@
     class Page {
         actions = 1250;
         populationSize = 1000;
-        geneNumber = 17;
+        geneNumber = 12;
         survivabilityThreshold = 60;
         level = 0;
 
@@ -185,7 +189,7 @@
             this.update = this.update.bind(this);
             this.neuronTypes = {};
             this.population = [];
-            this.pageRenderer = new PageRenderer();
+            this.pageRenderer = new PageRenderer(this);
             EventBus.subscribe('paramChange', e => {
                 if(typeof this[e.name] !== 'undefined'){
                     this[e.name] = e.value;
@@ -395,6 +399,7 @@
         renderAgentDetails(agent){
             this.selectedAgent = agent || [...this.map.population][~~(Math.random() * this.map.population.length - 1)];
             this.detailsRenderer.render(this.selectedAgent);
+            EventBus.publish('selectedAgent', this.selectedAgent);
         }
 
         stopRendering(){
