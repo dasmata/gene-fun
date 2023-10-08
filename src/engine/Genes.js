@@ -45,7 +45,10 @@ class Genes extends Array {
                     this.createGene();
                     continue;
                 }
-                this.push(this.parents[Math.round(Math.random())][i])
+                const gene = this.parents[Math.round(Math.random())][i];
+                gene[3] = 1;
+                gene[4] = 1
+                this.push(gene)
             }
         } else {
             let cursor = 0
@@ -81,8 +84,10 @@ class Genes extends Array {
             ~~(Math.random() * (this.limits[this.connectionMethods[connectionType][0]] + 1)), // neuron
             ~~(Math.random() * (this.limits[this.connectionMethods[connectionType][1]] + 1)), // neuron
             connectionType, // connection type
-            ~~(Math.random() * maxWeight), // neuron 1 weight
-            ~~(Math.random() * maxWeight) // neuron 2 weight
+            // ~~(Math.random() * maxWeight), // neuron 1 weight
+            // ~~(Math.random() * maxWeight) // neuron 2 weight
+            1,
+            1
         ]);
     }
 

@@ -179,7 +179,8 @@ class Board extends Observable{
     nextLevel() {
         this.level++;
         if(!this.levels[this.level]){
-            throw new Error('No more levels');
+            // throw new Error('No more levels');
+            this.level = 0;
         }
         EventBus.publish('paramChange', {
             name: 'level',
@@ -224,6 +225,7 @@ class Board extends Observable{
                 }
                 return acc;
             }, {}),
+            locationIdx: this.locationIdx ? [...this.locationIdx] : []
         };
     }
 }

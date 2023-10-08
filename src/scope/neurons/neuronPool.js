@@ -22,7 +22,7 @@ const neuronPool = (() => {
             // 'pv9': processingVoidNeuron.toString(),
         // },
         {
-            // 'mrand': moveActivationFunction.toString(),
+            'mrand': moveActivationFunction.toString(),
             'mr': moveActivationFunction.toString(),
             'ml': moveActivationFunction.toString(),
             'mu': moveActivationFunction.toString(),

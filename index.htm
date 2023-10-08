@@ -61,7 +61,7 @@
             </label>
             <label>
                 <span>Actions: </span>
-                <input name="actions" type="range" min="1" max="2000" id="actions-slider" oninput="this.nextElementSibling.value = this.value" />
+                <input name="actions" type="range" min="1" max="10000" id="actions-slider" oninput="this.nextElementSibling.value = this.value" />
                 <output></output>
             </label>
             <label>
@@ -159,9 +159,9 @@
 
 
     class Page {
-        actions = 1250;
+        actions = 2000;
         populationSize = 1000;
-        geneNumber = 12;
+        geneNumber = 18;
         survivabilityThreshold = 60;
         level = 0;
 
@@ -356,14 +356,10 @@
                 maxSurvivability: Math.max(this.armageddonStats?.maxSurvivability || 0, survivability)
             };
             if (survivability > this.survivabilityThreshold){
-                try{
-                    this.levelUp();
-                    this.armageddonStats.maxSurvivability = null;
-                } catch (e) {
-                    alert('Great success!!');
-                    return;
-                }
+                alert('Great success!!');
+                return;
             }
+            this.levelUp();
             this.map.population = [];
 
             endMark = performance.mark('aaa');

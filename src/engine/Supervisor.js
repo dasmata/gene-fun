@@ -26,7 +26,7 @@ class Supervisor extends Observable {
                     hasNext: i !== actionsNr
                 };
             }
-        })(this.actionsNr)
+        })(parseInt(this.actionsNr))
     }
 
     frame(i) {
