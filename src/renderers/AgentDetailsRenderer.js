@@ -142,7 +142,7 @@ class AgentDetailsRenderer {
                     line.setAttribute('x2', dest.offsetLeft + 20);
                     line.setAttribute('y2', 40);
                     line.setAttribute('stroke', weight > 0 ? '#00ff00' : '#ff0000');
-                    line.setAttribute('stroke-width', (Math.abs(weight) + 1) / 2);
+                    line.setAttribute('stroke-width', (Math.abs(weight) + 1) / 20);
                     svgEl[idx].appendChild(line);
                 });
             });

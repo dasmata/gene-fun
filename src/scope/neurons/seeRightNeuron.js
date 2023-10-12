@@ -28,11 +28,13 @@ const seeRightNeuron = function (agent) {
             }
         }
     }
-    if(minDistance > 0 && minDistance < wallDistance){
-        return this.sightRange - minDistance;
-    } else if (minDistance === 0){
-        return this.defaultVal;
+    if (minDistance > 0) {
+        if (minDistance < wallDistance) {
+            return this.sightRange - minDistance;
+        } else {
+            return wallDistance / 2;
+        }
     } else {
-        return wallDistance
+        return wallDistance;
     }
 }

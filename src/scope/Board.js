@@ -10,6 +10,7 @@ class Board extends Observable{
     spawnAreas = [];
     walls = [];
     locationIdx;
+    winners = {};
 
     constructor(size, levels, level = 0) {
         super();
@@ -179,14 +180,28 @@ class Board extends Observable{
     nextLevel() {
         this.level++;
         if(!this.levels[this.level]){
-            // throw new Error('No more levels');
-            this.level = 0;
+            throw new Error('No more levels');
         }
         EventBus.publish('paramChange', {
             name: 'level',
             value: this.level
         })
         return 1;
+    }
+
+    meetsGoal(value){
+        let found = false;
+        this.breedingAreas.forEach(area => {
+            if(
+                area[0][0] < value[0]
+                && area[1][0] > value[0]
+                && area[0][1] < value[1]
+                && area[1][1] > value[1]
+            ) {
+                found = true;
+            }
+        });
+        return found;
     }
 
     update(e) {
@@ -203,6 +218,7 @@ class Board extends Observable{
             if(oldActionValue && this.locationIdx.has(`${oldActionValue[0]},${oldActionValue[1]}`)){
                 this.locationIdx.delete(`${oldActionValue[0]},${oldActionValue[1]}`);
             }
+
             this.locationIdx.add(`${newActionValue[0]},${newActionValue[1]}`);
             return true;
         }

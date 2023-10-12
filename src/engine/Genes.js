@@ -1,5 +1,3 @@
-const connectionMethods = [];
-
 class Genes extends Array {
     parents = [];
     limits = {};
@@ -46,8 +44,6 @@ class Genes extends Array {
                     continue;
                 }
                 const gene = this.parents[Math.round(Math.random())][i];
-                gene[3] = 1;
-                gene[4] = 1
                 this.push(gene)
             }
         } else {
@@ -62,6 +58,14 @@ class Genes extends Array {
 
     generateGenes() {
         if(this.useRandomNeuronConnections){
+            // this.push([0,0,0,1,1]);
+            // this.push([1,1,0,1,1]);
+            // this.push([2,2,0,1,1]);
+            // this.push([3,3,0,1,1]);
+            // this.push([0,0,1,1,1]);
+            // this.push([1,2,1,1,1]);
+            // this.push([2,2,1,1,1]);
+            // this.push([3,3,1,1,1]);
             for(let i = 0; i < this.size; i++){
                 this.createGene();
             }
@@ -84,10 +88,8 @@ class Genes extends Array {
             ~~(Math.random() * (this.limits[this.connectionMethods[connectionType][0]] + 1)), // neuron
             ~~(Math.random() * (this.limits[this.connectionMethods[connectionType][1]] + 1)), // neuron
             connectionType, // connection type
-            // ~~(Math.random() * maxWeight), // neuron 1 weight
-            // ~~(Math.random() * maxWeight) // neuron 2 weight
-            1,
-            1
+            ~~(Math.random() * maxWeight), // neuron 1 weight
+            ~~(Math.random() * maxWeight) // neuron 2 weight
         ]);
     }
 
@@ -121,4 +123,4 @@ class Genes extends Array {
 }
 
 Genes.mutationFactor = 1000;
-Genes.weightInterval = [-10, 10];
+Genes.weightInterval = [-100, 100];

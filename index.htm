@@ -66,7 +66,7 @@
             </label>
             <label>
                 <span>Gene nr: </span>
-                <input name="geneNumber" type="range" id="genes-slider" max="20" min="1" oninput="this.nextElementSibling.value = this.value" />
+                <input name="geneNumber" type="range" id="genes-slider" max="200" min="1" oninput="this.nextElementSibling.value = this.value" />
                 <output></output>
             </label>
             <label>
@@ -161,7 +161,7 @@
     class Page {
         actions = 2000;
         populationSize = 1000;
-        geneNumber = 18;
+        geneNumber = 23;
         survivabilityThreshold = 60;
         level = 0;
 
@@ -356,12 +356,14 @@
                 maxSurvivability: Math.max(this.armageddonStats?.maxSurvivability || 0, survivability)
             };
             if (survivability > this.survivabilityThreshold){
-                alert('Great success!!');
-                return;
+                try {
+                    this.levelUp();
+                } catch (e) {
+                    alert('Great success!!');
+                    return;
+                }
             }
-            this.levelUp();
             this.map.population = [];
-
             endMark = performance.mark('aaa');
             console.log(endMark.startTime - startMark.startTime);
             this.updateWorker.postMessage({
@@ -424,6 +426,8 @@
             if(this.map.canReach(currentActionVector, actionValue)){
                 currentActionValue.oldActionValue = currentActionValue.actionValue;
                 currentActionValue.actionValue = actionValue.toJSON();
+            } else {
+                currentActionValue.oldActionValue = currentActionValue.actionValue;
             }
             return currentActionValue;
 
@@ -476,6 +480,7 @@
                     this.neuronTypes
                 );
                 actionResult.reward = this.getActionReward(actionResult);
+                console.log(actionResult.reward)
                 this.map.population.forEach(agent => {
                     if (agent.id === actionResult.id) {
                         agent.actionValue = actionResult.actionValue;
