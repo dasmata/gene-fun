@@ -130,10 +130,6 @@
         mrand: () => [
             Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1),
             Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1)
-        ],
-        mrand2: () => [
-            Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1),
-            Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1)
         ]
     };
     const STATUS_PAUSED = 0;
@@ -325,7 +321,9 @@
         handleComputed(e){
             const computeResults = e.data.payload;
             if(this.selectedAgent.id){
-                this.detailsRenderer.update(computeResults[this.selectedAgent.id])
+                setTimeout(() => {
+                    this.detailsRenderer.update(computeResults[this.selectedAgent.id])
+                });
             }
             const results = Object.values(computeResults).map(entry => {
                 const actionResult = this.actionAggregator(entry.results, entry.agent, this.neuronTypes);
@@ -437,7 +435,7 @@
             if((
                 agent.actionValue[0] === agent.oldActionValue[0] && agent.actionValue[0] === agent.oldActionValue[0])
             ) {
-                return Math.round(Math.random() * 5) * (Math.round(Math.random()) === 0 ? 1 : -1);
+                return Math.round(Math.random() * 10) * (Math.round(Math.random()) === 0 ? 1 : -1);
             }
             return Math.max(...this.map.breedingAreas.map(area => {
                 const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
