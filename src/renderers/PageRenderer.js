@@ -60,7 +60,7 @@ class PageRenderer {
         EventBus.subscribe('paramChange', e => {
            switch(e.name){
                case 'level':
-                   this.levelIndicator.value = e.value;
+                   this.levelIndicator.value = parseInt(e.value);
                    break;
            }
         });

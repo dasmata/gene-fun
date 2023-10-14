@@ -29,7 +29,7 @@ const seeUpNeuron = function (agent, input, weight) {
     if(minDistance > 0 && minDistance < wallDistance){
         return this.sightRange - minDistance;
     } else if (minDistance === 0){
-        return 1;
+        return this.defaultVal;
     } else {
         return wallDistance
     }

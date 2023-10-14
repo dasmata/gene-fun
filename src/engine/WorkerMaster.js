@@ -109,6 +109,32 @@ class WorkerMaster {
         }, this.workers[Math.round(Math.random() * this.workers.length)]);
     }
 
+    importAgents(data) {
+        this.agentsIdx = {};
+        let importRequestId = null;
+        let unsubAgentCreated = this.messageBus.subscribe('agentCreated', (msg) => {
+            this.agentsIdx[msg.data.payload.id] = this.workers.indexOf(msg.target);
+            this.clientMessenger.send(msg.data);
+        });
+        const perWorker = Math.ceil(data.payload.length / this.workers.length);
+        this.workers.forEach((worker, idx) => {
+            importRequestId = this.messageBus.publish(
+                'importAgents',
+                { agents: data.payload.slice(idx * perWorker, (idx + 1) * perWorker) },
+                worker,
+                importRequestId
+            )
+        });
+        const unsubAllAgentsReady = this.messageBus.subscribe('ready', (data) => {
+            unsubAllAgentsReady()
+            unsubAgentCreated();
+            this.clientMessenger.send({
+                type: 'ready',
+                payload: null
+            });
+        });
+    }
+
     clientMessengerFactory() {
         let id = 0;
         self.addEventListener('message', e => {
@@ -144,7 +170,9 @@ class WorkerMaster {
             messages[this.agentsIdx[agentId]][agentId] = agents[agentId];
         });
         messages.map((workerAgents, idx) => {
-            return this.messageBus.publish(data.type, {agents: workerAgents}, this.workers[idx])
+            return this.messageBus.publish(data.type, {
+                agents: workerAgents,
+            }, this.workers[idx])
         });
     }
 

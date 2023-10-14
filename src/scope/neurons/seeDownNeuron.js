@@ -27,11 +27,9 @@ const seeDownNeuron = function (agent) {
             }
         }
     }
-    if(minDistance > 0 && minDistance < wallDistance){
+    if(minDistance > 0 && minDistance < wallDistance) {
         return this.sightRange - minDistance;
-    } else if (minDistance === 0){
-        return 1;
     } else {
-        return wallDistance;
+        return this.defaultVal;
     }
 }
