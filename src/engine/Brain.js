@@ -87,7 +87,11 @@ class Brain extends Observable {
         rewardsToApply.forEach(el => {
             this.updateConnectionsWeight(
                 el[0],
-                found === rewardsToApply.length ? (Math.round(Math.random()) ? 1 : -1) * el[1] : el[1]
+                el[1]
+                // if no neurons fired or if ALL neurons fired, randomize the reward sign
+                // found === 0 || found === rewardsToApply.length
+                //     ? (Math.round(Math.random()) ? 1 : -1) * el[1]
+                //     : el[1]
             )
         });
         return this.connections;

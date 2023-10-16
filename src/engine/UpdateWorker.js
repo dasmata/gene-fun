@@ -174,7 +174,7 @@ class UpdateWorker extends Observable {
         this.notify(e)
     }
 
-    setAggregatedValues(agents) {
+    setAggregatedValues({ agents }) {
         setTimeout(() => {
             this.setAgentsActionValues(agents)
             this.supervisor.play();
@@ -202,9 +202,9 @@ class UpdateWorker extends Observable {
     }
 
     setActions(val) {
-        this.minActions = val;
+        this.minActions = parseInt(val);
         if (this.supervisor) {
-            this.supervisor.actionsNr = val;
+            this.supervisor.actionsNr = parseInt(val);
         }
     }
 
@@ -257,7 +257,7 @@ self.onmessage = (e) => {
             worker.rpc(e.data.payload)
             break;
         case 'setAggregatedValues':
-            worker.setAggregatedValues(e.data.payload.agents);
+            worker.setAggregatedValues(e.data.payload);
             break;
         case 'createDescendants':
             worker.createDescendants(e.data.payload);
