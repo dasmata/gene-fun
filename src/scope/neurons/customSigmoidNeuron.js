@@ -1,4 +1,4 @@
-const moveActivationFunction = function (agent, input){
+const customSigmoidNeuron = function (agent, input){
     if (input === 0) {
         return 0
     }
