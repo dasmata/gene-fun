@@ -76,7 +76,12 @@ class UpdateWorker extends Observable {
     createNeuronPool(neurons){
         const lvlIdx = [];
         this.neuronPool = Object.keys(neurons).reduce((acc, neuronType) => {
-            acc[neuronType] = new self[neurons[neuronType][0]]({}, neuronType, new Function(`return ${neurons[neuronType][1]}`)(), neurons[neuronType][3]);
+            acc[neuronType] = new self[neurons[neuronType][0]](
+                neuronType,
+                new Function(`return ${neurons[neuronType][1]}`)(),
+                neurons[neuronType][4], // summation type
+                neurons[neuronType][3] // id
+            );
             lvlIdx[neurons[neuronType][2]] = lvlIdx[neurons[neuronType][2]] || [];
             lvlIdx[neurons[neuronType][2]].push(neuronType);
             this.notify({
