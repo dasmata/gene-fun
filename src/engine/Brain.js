@@ -23,15 +23,6 @@ class Brain extends Observable {
         this.connectionsDestIdx[neuron2].push([neuron1, weight, id]);
     }
 
-    weightFunction(inputs, weights) {
-        let weightSum = 0
-        const weightedInputs =  inputs.reduce((acc, el, idx) => {
-            weightSum += weights[idx]
-            return acc + (el * weights[idx]);
-        }, 0);
-        return weightSum === 0 ? 0 : weightedInputs / weightSum;
-    }
-
     compute() {
         const totalLevels = this.levels.length - 1;
         const results = this.levels.reduce((lvlResults, lvl, i) => {
@@ -51,14 +42,13 @@ class Brain extends Observable {
 
                         return sums;
                     }, [[], [], []])
-                    const inputVal = Math.round(this.weightFunction(prevResults[0], prevResults[1]));
-                    const outputVal = neuron.main(this.agent, inputVal);
+                    const outputVal = neuron.main(this.agent, prevResults[0], prevResults[1]);
                     lvlResults[neuron.id] = {val: outputVal, prev: prevResults, id: neuron.id, weightedInput: inputVal};
                 })
             } else {
                 lvlResults = lvl.reduce((acc, neuron) => {
                     if(this.connections[neuron.id]) {
-                        acc[neuron.id] = {val: neuron.main(this.agent), prev: null, id: neuron.id};
+                        acc[neuron.id] = {val: neuron.main(this.agent, [], []), prev: null, id: neuron.id};
                     }
                     return acc;
                 }, {})

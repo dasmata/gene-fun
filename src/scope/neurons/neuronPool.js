@@ -3,30 +3,30 @@ const neuronPool = (() => {
     const memoValues = [];
     const neuronMap = [
         {
-            'sl': [seeLeftNeuron.toString(), 'VisionNeuron'],
-            'sr': [seeRightNeuron.toString(), 'VisionNeuron'],
-            'su': [seeUpNeuron.toString(), 'VisionNeuron'],
-            'sd': [seeDownNeuron.toString(), 'VisionNeuron'],
+            'sl': [seeLeftNeuron.toString(), 'VisionNeuron', 2],
+            'sr': [seeRightNeuron.toString(), 'VisionNeuron', 2],
+            'su': [seeUpNeuron.toString(), 'VisionNeuron', 2],
+            'sd': [seeDownNeuron.toString(), 'VisionNeuron', 2],
         },
         {
-            'pv1': processingVoidNeuron.toString(),
-            'pv2': processingVoidNeuron.toString(),
-            'pv3': processingVoidNeuron.toString(),
-            'pv4': processingVoidNeuron.toString(),
+            'pv1': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
+            'pv2': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
+            'pv3': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
+            'pv4': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
         },
         {
-            'pv5': processingVoidNeuron.toString(),
-            'pv6': processingVoidNeuron.toString(),
-            'pv7': processingVoidNeuron.toString(),
-            'pv8': processingVoidNeuron.toString(),
-            'pv9': processingVoidNeuron.toString(),
+            'pv5': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
+            'pv6': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
+            'pv7': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
+            'pv8': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
+            'pv9': [processingVoidNeuron.toString(), 'ScopeNeuron', 1],
         },
         {
-            // 'mrand': moveActivationFunction.toString(),
-            'ml': moveActivationFunction.toString(),
-            'mr': moveActivationFunction.toString(),
-            'mu': moveActivationFunction.toString(),
-            'md': moveActivationFunction.toString(),
+            // 'mrand': [moveActivationFunction.toString(), 'ScopeNeuron', SUMMATION_TYPE_AVG],
+            'ml': [moveActivationFunction.toString(), 'ScopeNeuron', 1],
+            'mr': [moveActivationFunction.toString(), 'ScopeNeuron', 1],
+            'mu': [moveActivationFunction.toString(), 'ScopeNeuron', 1],
+            'md': [moveActivationFunction.toString(), 'ScopeNeuron', 1],
         },
     ]
     return (world) => {
@@ -39,11 +39,13 @@ const neuronPool = (() => {
             Object.keys(level).forEach(type => {
                 let className = 'ScopeNeuron';
                 let neuronFunc = level[type];
+                let summationType = 1;
                 if(Array.isArray(neuronFunc)){
                     className = neuronFunc[1]
+                    summationType = neuronFunc[2]
                     neuronFunc = neuronFunc[0];
                 }
-                acc[type] = [className, neuronFunc, idx, type]
+                acc[type] = [className, neuronFunc, idx, type, summationType]
             })
             return acc;
         }, {});
