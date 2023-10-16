@@ -3,10 +3,10 @@ const neuronPool = (() => {
     const memoValues = [];
     const neuronMap = [
         {
-            'sl': [seeLeftNeuron.toString(), 'VisionNeuron'],
-            'sr': [seeRightNeuron.toString(), 'VisionNeuron'],
-            'su': [seeUpNeuron.toString(), 'VisionNeuron'],
-            'sd': [seeDownNeuron.toString(), 'VisionNeuron'],
+            'sl': [seeLeftNeuron.toString(), 'VisionNeuron', 2],
+            'sr': [seeRightNeuron.toString(), 'VisionNeuron', 2],
+            'su': [seeUpNeuron.toString(), 'VisionNeuron', 2],
+            'sd': [seeDownNeuron.toString(), 'VisionNeuron', 2],
         },
         {
             'pv1': tanhNeuron.toString(),
@@ -39,11 +39,13 @@ const neuronPool = (() => {
             Object.keys(level).forEach(type => {
                 let className = 'ScopeNeuron';
                 let neuronFunc = level[type];
+                let summationType = 1;
                 if(Array.isArray(neuronFunc)){
                     className = neuronFunc[1]
+                    summationType = neuronFunc[2]
                     neuronFunc = neuronFunc[0];
                 }
-                acc[type] = [className, neuronFunc, idx, type]
+                acc[type] = [className, neuronFunc, idx, type, summationType]
             })
             return acc;
         }, {});
