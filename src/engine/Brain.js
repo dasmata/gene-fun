@@ -43,7 +43,7 @@ class Brain extends Observable {
                         return sums;
                     }, [[], [], []])
                     const outputVal = neuron.main(this.agent, prevResults[0], prevResults[1]);
-                    lvlResults[neuron.id] = {val: outputVal, prev: prevResults, id: neuron.id, weightedInput: inputVal};
+                    lvlResults[neuron.id] = {val: outputVal, prev: prevResults, id: neuron.id};
                 })
             } else {
                 lvlResults = lvl.reduce((acc, neuron) => {
