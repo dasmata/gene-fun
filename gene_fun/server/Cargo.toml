@@ -1,0 +1,23 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = "0.6.20"
+serde = { version = "1.0", features = ["derive"] }
+openssl = "0.10"
+tokio = { version = "1", features = ["full"] }
+tokio-openssl = "0.6"
+hyper = { version = "0.14", features = ["full"] }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.4.0", features = ["fs", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+futures-util = { version = "0.3", default-features = false, features = ["alloc"] }
+mongodb = "2.7.0"
+bson = "2.7.0"
+chrono = "0.4.31"
+uuid = { version = "1.4.1", features = ["v4"] }
