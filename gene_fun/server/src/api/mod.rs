@@ -1,8 +1,9 @@
 use std::sync::Arc;
 use axum::{Router, Extension};
-use services::{UserService::UserService, TrainingService::TrainingService};
+use services::{UserService::UserService, TrainingService::TrainingService, PopulationService::PopulationService};
 use mongodb::{Database};
-use controllers::{user, training};
+use controllers::{user, training, population};
+
 #[path = "./controllers/mod.rs"]
 mod controllers;
 mod services;
@@ -22,18 +23,21 @@ pub async fn get_router() -> Router {
     Router::new()
         .nest("/user", user::get_router(Extension(shared_state.clone())))
         .nest("/training", training::get_router(Extension(shared_state.clone())))
+        .nest("/population", population::get_router(Extension(shared_state.clone())))
 }
 
 pub struct ServiceContainer {
     user: UserService,
-    training: TrainingService
+    training: TrainingService,
+    population: PopulationService
 }
 
 impl ServiceContainer {
     pub fn new(db: Database) -> ServiceContainer {
         ServiceContainer {
             user: UserService::new(db.collection("users")),
-            training: TrainingService::new(db.collection("trainings"))
+            training: TrainingService::new(db.collection("trainings")),
+            population: PopulationService::new(db.collection("populations"))
         }
     }
 }

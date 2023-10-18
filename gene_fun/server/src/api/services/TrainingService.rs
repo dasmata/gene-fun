@@ -1,5 +1,5 @@
 use bson::{to_document};
-use chrono::{DateTime, Utc};
+use chrono::{Utc};
 use futures_util::{AsyncReadExt, TryFutureExt};
 use mongodb::{Collection};
 use uuid::Uuid;
@@ -46,13 +46,13 @@ impl TrainingService {
         let document_result = to_document(&training);
         let document = match document_result {
             Ok(doc) => doc,
-            Err(_) => panic!("Could not create document from User")
+            Err(_) => panic!("Could not create document from training")
         };
 
         let insert_result = self.collection.insert_one(document, None).await;
         match insert_result {
             Ok(_) => {}
-            Err(_) => panic!("Could not insert user")
+            Err(_) => panic!("Could not insert training")
         }
         Some(training)
     }
