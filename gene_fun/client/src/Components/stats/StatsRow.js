@@ -38,7 +38,7 @@ class StatsRow extends HTMLElement {
             return;
         }
 
-        this._shadowRoot.querySelector('.stats-value').innerText = this.value || 'N/A';
+        this._shadowRoot.querySelector('.stats-value').innerText = typeof this.value === 'undefined' ? 'N/A' : this.value;
     }
 
     setLabel() {

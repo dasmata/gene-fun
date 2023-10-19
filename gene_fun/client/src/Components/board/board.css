@@ -1,0 +1,12 @@
+.map {
+    width: calc(256px * (2 + 2));
+    border: 1px solid black;
+    z-index: 1;
+    position: absolute;
+}
+.breeding-area {
+    width: calc(256px * (2 + 2));
+    border: 1px solid black;
+    z-index: 0;
+    position: absolute;
+}

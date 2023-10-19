@@ -21,7 +21,7 @@ class Stats extends HTMLElement {
         this._stats.forEach(stat => {
             const el = document.createElement('stats-row-view');
             el.setAttribute('label', stat.label);
-            if(stat.value){
+            if(typeof stat.value !== 'undefined'){
                 el.setAttribute('value', stat.value);
             }
             template.querySelector('fieldset.stats').appendChild(el);

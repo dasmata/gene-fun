@@ -14,7 +14,7 @@ class Import extends HTMLElement {
         this.fileUploader = template.getElementById('import-population');
 
         this.setActionHandlers();
-        shadow.append(template)
+        shadow.append(template);
     }
 
     setActionHandlers(){

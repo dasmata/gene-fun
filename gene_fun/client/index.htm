@@ -9,20 +9,24 @@
 </head>
 <body>
 <main>
-    <section id="canvas-wrapper"></section>
+    <section id="canvas-wrapper">
+        <board-view></board-view>
+    </section>
     <section id="controls">
-        <fieldset>
-            <legend>Training</legend>
-            <label class="switch">
-                <input type="checkbox">
-                <span class="slider round"></span>
-            </label>
-        </fieldset>
         <controls-view></controls-view>
         <import-view></import-view>
         <stats-view></stats-view>
+        <agent-details-view></agent-details-view>
     </section>
 </main>
+
+<template id="board-tpl">
+    <style>
+        @import "src/Components/board/board.css";
+    </style>
+    <canvas class="breeding-area"></canvas>
+    <canvas class="map"></canvas>
+</template>
 <template id="import-tpl">
     <style>
         @import "src/Components/import/main.css";
@@ -44,7 +48,6 @@
     </style>
     <fieldset>
         <legend>Controls</legend>
-        <span>Gen <span id="gen">0</span></span>
         <button id="killSw">Kill everyone!!</button>
         <button id="start">create</button>
         <button id="play">play</button>
@@ -70,7 +73,11 @@
         </label>
     </fieldset>
 </template>
-<template id="agent">
+
+<template id="agent-tpl">
+    <style>
+        @import "src/Components/agentDetails/agentDetails.css";
+    </style>
     <div>
         <fieldset id="details-container">
             <legend>Agent details</legend>
@@ -82,7 +89,46 @@
         </fieldset>
     </div>
 </template>
-<template id="level">
+<template id="agent-neuron-level-tpl">
+    <style>
+        h4 {
+            margin: 0;
+            height: var(--neuron-size);
+            padding: 5px;
+            line-height: var(--neuron-size);
+            width: 100px;
+        }
+
+        .level {
+            width: 500px;
+            display: flex;
+        }
+
+        svg {
+            display: block;
+            margin-left: 110px;
+        }
+        .level-neurons {
+            width: 390px;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+        .level-neurons div {
+            margin: 0 5px;
+            border: 1px solid black;
+            border-radius: 50%;
+            padding: 5px;
+            width: var(--neuron-size);
+            height: var(--neuron-size);
+            text-align: center;
+            line-height: var(--neuron-size);
+        }
+
+        .level-neurons .result {
+            border-radius: 0;
+        }
+    </style>
     <div class="level-row">
         <div class="level">
             <h4 class="layer-title"></h4>

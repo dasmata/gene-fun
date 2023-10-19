@@ -1,5 +1,3 @@
-import { MapRenderer } from "../renderers/MapRenderer.js";
-import { AgentDetailsRenderer } from "../renderers/AgentDetailsRenderer.js";
 import { Vector } from "../scope/Vector.js";
 import { Board } from "../scope/Board.js";
 import { neuronPool } from "../scope/neurons/neuronPool.js";
@@ -7,10 +5,11 @@ import { EventBus } from "../EventBus.js";
 import { FileWriter } from "../FileWriter.js";
 import { config } from "../scope/config.js";
 
-
-import "../Components/controls/Controls.js"
-import "../Components/import/Import.js"
-import "../Components/stats/Stats.js"
+import "../Components/controls/Controls.js";
+import "../Components/import/Import.js";
+import "../Components/stats/Stats.js";
+import "../Components/agentDetails/AgendDetails.js";
+import "../Components/board/Board.js";
 
 
 let startMark = null
@@ -53,13 +52,13 @@ class Page {
     geneNumber = 30;
     survivabilityThreshold = 60;
     level = 0;
+    generationNr = 0;
 
     map;
 
     controlsView;
     statsView;
-    mapRenderer;
-    detailsRenderer;
+    boardView;
 
     neuronTypes;
     population;
@@ -81,6 +80,8 @@ class Page {
 
         this.controlsView = document.querySelector("controls-view");
         this.statsView = document.querySelector('stats-view');
+        this.agentDetailsView = document.querySelector('agent-details-view');
+        this.boardView = document.querySelector('board-view');
 
 
         this.controlsView.setAttribute('actions', `${this.actions}`);
@@ -177,6 +178,7 @@ class Page {
         this.map.setPopulation(this.population);
 
         this.updateStats();
+        this.agentDetailsView.neurons = this.neuronTypes;
 
         this.map.placeAgentsOnMap();
         if (this.status === STATUS_RUNNING) {
@@ -230,7 +232,8 @@ class Page {
         const computeResults = e.data.payload;
         if(this.selectedAgent.id){
             setTimeout(() => {
-                this.detailsRenderer.update(computeResults[this.selectedAgent.id])
+                this.agentDetailsView.agent = computeResults[this.selectedAgent.id].agent;
+                this.agentDetailsView.results = computeResults[this.selectedAgent.id].results;
             });
         }
         const results = Object.values(computeResults).map(entry => {
@@ -261,6 +264,7 @@ class Page {
             survivability,
             maxSurvivability: Math.max(this.armageddonStats?.maxSurvivability || 0, survivability)
         };
+        this.generationNr++;
         if (survivability > this.survivabilityThreshold){
             try {
                 this.levelUp();
@@ -291,6 +295,10 @@ class Page {
     updateStats() {
         this.statsView.stats = [
             {
+                label: 'Generation nr',
+                value: this.generationNr
+            },
+            {
                 label: 'Current population',
                 value: this.map.population.length
             },
@@ -314,24 +322,22 @@ class Page {
     }
 
     startRendering = () => {
-        this.detailsRenderer = this.detailsRenderer || new AgentDetailsRenderer(document.getElementById('controls'), this.map, this.neuronTypes);
-        this.mapRenderer = this.mapRenderer || new MapRenderer(this.map);
+        this.boardView.board = this.map;
+        // this.mapRenderer = this.mapRenderer || new MapRenderer(this.map);
         this.updateStats();
-        this.mapRenderer.render();
+        // this.mapRenderer.render();
         this.renderAgentDetails();
     }
 
     renderAgentDetails(agent){
         this.selectedAgent = agent || [...this.map.population][~~(Math.random() * this.map.population.length - 1)];
-        this.detailsRenderer.render(this.selectedAgent);
+        this.agentDetailsView.agent = this.selectedAgent;
         EventBus.publish('selectedAgent', this.selectedAgent);
     }
 
     stopRendering(){
         EventBus.publish('stopRender');
         this.mapRenderer = null;
-        this.detailsRenderer = null;
-        this.statsRenderer = null;
     }
 
     actionAggregator(results, currentActionValue, neuronTypes) {
@@ -407,18 +413,14 @@ class Page {
                 this.neuronTypes
             );
             actionResult.reward = this.getActionReward(actionResult);
-            console.log(actionResult.reward)
             this.map.population.forEach(agent => {
                 if (agent.id === actionResult.id) {
                     agent.actionValue = actionResult.actionValue;
                     agent.oldActionValue = actionResult.oldActionValue;
                 }
             });
-
-            this.detailsRenderer.update({
-                results: response,
-                agent: actionResult
-            })
+            this.agentDetailsView.results = response;
+            this.agentDetailsView.agent = actionResult;
         });
     }
 
