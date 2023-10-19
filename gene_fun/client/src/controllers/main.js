@@ -1,6 +1,5 @@
 import { MapRenderer } from "../renderers/MapRenderer.js";
 import { AgentDetailsRenderer } from "../renderers/AgentDetailsRenderer.js";
-import { StatsRenderer } from "../renderers/StatsRenderer.js";
 import { Vector } from "../scope/Vector.js";
 import { Board } from "../scope/Board.js";
 import { neuronPool } from "../scope/neurons/neuronPool.js";
@@ -11,6 +10,7 @@ import { config } from "../scope/config.js";
 
 import "../Components/controls/Controls.js"
 import "../Components/import/Import.js"
+import "../Components/stats/Stats.js"
 
 
 let startMark = null
@@ -57,9 +57,9 @@ class Page {
     map;
 
     controlsView;
+    statsView;
     mapRenderer;
     detailsRenderer;
-    statsRenderer;
 
     neuronTypes;
     population;
@@ -80,9 +80,13 @@ class Page {
         this.population = [];
 
         this.controlsView = document.querySelector("controls-view");
+        this.statsView = document.querySelector('stats-view');
+
+
         this.controlsView.setAttribute('actions', `${this.actions}`);
         this.controlsView.setAttribute('gene-number', `${this.geneNumber}`);
         this.controlsView.setAttribute('survivability-threshold', `${this.survivabilityThreshold}`);
+
 
 
         EventBus.subscribe('paramChange', e => {
@@ -171,10 +175,9 @@ class Page {
 
     handleWorkerReady(){
         this.map.setPopulation(this.population);
-        this.statsRenderer?.render({
-            armageddonStats: this.armageddonStats,
-            population: this.population.length
-        });
+
+        this.updateStats();
+
         this.map.placeAgentsOnMap();
         if (this.status === STATUS_RUNNING) {
             this.playHandler();
@@ -285,15 +288,36 @@ class Page {
         this.mapRenderer.render();
     }
 
+    updateStats() {
+        this.statsView.stats = [
+            {
+                label: 'Current population',
+                value: this.map.population.length
+            },
+            {
+                label: 'Old population size',
+                value: this.armageddonStats?.populationSize
+            },
+            {
+                label: 'Parents',
+                value: this.armageddonStats?.replicatorsNr
+            },
+            {
+                label: 'Survivability',
+                value: this.armageddonStats?.survivability
+            },
+            {
+                label: 'Max. survivability',
+                value: this.armageddonStats?.maxSurvivability
+            }
+        ]
+    }
+
     startRendering = () => {
         this.detailsRenderer = this.detailsRenderer || new AgentDetailsRenderer(document.getElementById('controls'), this.map, this.neuronTypes);
         this.mapRenderer = this.mapRenderer || new MapRenderer(this.map);
-        this.statsRenderer = this.statsRenderer || new StatsRenderer(document.getElementById('controls'));
-
+        this.updateStats();
         this.mapRenderer.render();
-        this.statsRenderer.render({
-            population: this.map.population.length
-        });
         this.renderAgentDetails();
     }
 

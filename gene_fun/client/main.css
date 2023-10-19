@@ -69,7 +69,7 @@ input:checked + .slider:before {
     --section-width: 530px;
 }
 
-controls-view, import-view {
+controls-view, import-view, stats-view {
     width: var(--section-width);
 }
 
@@ -87,28 +87,18 @@ main {
     z-index: 1;
     position: absolute;
 }
-.breeding-area{
+.breeding-area {
     width: calc(256px * (2 + 2));
     border: 1px solid black;
     z-index: 0;
     position: absolute;
-}
-fieldset {
-    width: var(--section-width)
 }
 
 #canvas-wrapper {
     width: calc(256px * (2 + 2));
     position: relative;
 }
-fieldset label, .stats .stats-row {
-    margin-top: 5px;
-    display: flex;
-}
-fieldset label span, .stats .stats-label {
-    display: block;
-    width: 150px;
-}
+
 .brain {
     padding: 10px 0;
 }

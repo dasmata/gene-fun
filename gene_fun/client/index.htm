@@ -20,6 +20,7 @@
         </fieldset>
         <controls-view></controls-view>
         <import-view></import-view>
+        <stats-view></stats-view>
     </section>
 </main>
 <template id="import-tpl">
@@ -91,14 +92,23 @@
     </div>
 </template>
 
-<template id="stats">
+<template id="stats-tpl">
+    <style>
+        @import "src/Components/stats/stats.css";
+    </style>
     <fieldset class="stats">
         <legend>Stats</legend>
-        <div class="stats-row">
-            <div class="stats-label">Label</div>
-            <div class="stats-value">value</div>
-        </div>
     </fieldset>
+</template>
+
+<template id="stats-row-tpl">
+    <style>
+        @import "src/Components/stats/statsRow.css";
+    </style>
+    <div class="stats-row">
+        <div class="stats-label"></div>
+        <div class="stats-value"></div>
+    </div>
 </template>
 
 </body>
