@@ -1,13 +1,7 @@
-importScripts(
-    'Observable.js',
-    'GenericNeuron.js',
-    'Agent.js',
-    'Brain.js',
-    'Population.js',
-    'Genes.js',
-    'Supervisor.js',
-    'utils.js'
-);
+import { Observable } from "./Observable.js";
+import { Agent } from "./Agent.js";
+import { Population } from "./Population.js";
+import { Supervisor } from "./Supervisor.js";
 
 class UpdateWorker extends Observable {
     populationSize;
@@ -19,14 +13,14 @@ class UpdateWorker extends Observable {
 
     consecutiveGenerationsEvolving;
 
-    init(data){
+    async init(data){
         this.populationSize = data.populationSize;
         this.lastResults = {};
         this.minActions = data.minActions;
         this.geneNumber = data.geneNumber;
         this.config = data.config;
         this.consecutiveGenerationsEvolving = 0;
-        this.loadDependencies(data.dependencies);
+        await this.loadDependencies(data.dependencies);
         this.createNeuronPool(data.neurons);
         const population = this.populationFactory();
         population.init();
@@ -67,9 +61,14 @@ class UpdateWorker extends Observable {
         });
     }
 
-    loadDependencies(deps){
+    async loadDependencies(deps){
         if (deps) {
-            importScripts(...deps);
+            const modules = await Promise.all(deps.map(dep => import(dep)));
+            modules.forEach(module => {
+                Object.keys(module).forEach(namedImport => {
+                    self[namedImport] = module[namedImport];
+                })
+            })
         }
     }
 
@@ -248,7 +247,7 @@ worker.attach({
     }
 })
 
-self.onmessage = (e) => {
+self.addEventListener('message', (e) => {
     switch(e.data.type){
         case 'init':
             worker.init(e.data.payload);
@@ -266,4 +265,4 @@ self.onmessage = (e) => {
             worker.importAgents(e.data.payload);
             break;
     }
-}
+});

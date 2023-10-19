@@ -58,3 +58,5 @@ Vector.noWrapNormalized = (el, base) => {
     }
     return val;
 }
+
+export { Vector }

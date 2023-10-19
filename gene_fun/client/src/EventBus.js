@@ -28,3 +28,5 @@ const EventBus = (() => {
         publish: bus.publish.bind(bus)
     }
 })();
+
+export { EventBus }

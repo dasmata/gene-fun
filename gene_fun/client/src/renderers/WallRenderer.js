@@ -11,3 +11,5 @@ class WallRenderer {
         this.ctx.closePath();
     }
 }
+
+export { WallRenderer }

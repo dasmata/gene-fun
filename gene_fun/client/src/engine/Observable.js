@@ -31,3 +31,5 @@ class Observable {
         return res;
     }
 }
+
+export { Observable }

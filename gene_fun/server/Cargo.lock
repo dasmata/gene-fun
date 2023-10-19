@@ -1445,6 +1445,7 @@ dependencies = [
  "mongodb",
  "openssl",
  "serde",
+ "serde_json",
  "tokio",
  "tokio-openssl",
  "tower",

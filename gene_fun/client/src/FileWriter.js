@@ -33,3 +33,5 @@ class FileWriter {
         this.fileObjectURL = null;
     }
 }
+
+export { FileWriter }

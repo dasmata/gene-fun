@@ -1,3 +1,5 @@
+import { ScopeNeuron } from "./ScopeNeuron.js";
+
 class VisionNeuron extends ScopeNeuron {
     sightRange = 0;
     defaultVal = 1;
@@ -6,4 +8,5 @@ class VisionNeuron extends ScopeNeuron {
         this.sightRange = 256;
     }
 }
-( self || {} ).VisionNeuron = VisionNeuron;
+
+export { VisionNeuron }

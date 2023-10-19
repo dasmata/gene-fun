@@ -1,3 +1,10 @@
+import { seeUpNeuron } from "./seeUpNeuron.js";
+import { seeRightNeuron } from "./seeRightNeuron.js";
+import { seeDownNeuron } from "./seeDownNeuron.js";
+import { seeLeftNeuron } from "./seeLeftNeuron.js";
+import { tanhNeuron } from "./tanhNeuron.js";
+import { customSigmoidNeuron } from "./customSigmoidNeuron.js";
+
 const neuronPool = (() => {
     const memoParams = [];
     const memoValues = [];
@@ -55,3 +62,5 @@ const neuronPool = (() => {
         return pool;
     }
 })()
+
+export { neuronPool }

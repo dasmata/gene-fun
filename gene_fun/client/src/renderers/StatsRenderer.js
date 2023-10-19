@@ -1,3 +1,5 @@
+import { EventBus } from "../EventBus.js";
+
 class StatsRenderer {
     genMarkerElement;
     currentElements;
@@ -58,3 +60,5 @@ class StatsRenderer {
         this.unsubscribeStopRender?.();
     }
 }
+
+export { StatsRenderer }

@@ -24,11 +24,14 @@ async fn get_training(
     let training_option = state.service_container.training.get_training(&training_id)
         .await;
 
+
     match training_option {
         None => {
             return StatusCode::NOT_FOUND.into_response()
         }
-        Some(training) => Json(training).into_response()
+        Some(training) => {
+            return Json(training).into_response()
+        }
     }
 }
 
@@ -40,8 +43,10 @@ async fn create_training(
     let training_option = state.service_container.training.create(&payload.name).await;
     match training_option {
         None => {
-            return StatusCode::BAD_REQUEST.into_response()
+            StatusCode::BAD_REQUEST.into_response()
         }
-        Some(training) => Json(training).into_response()
+        Some(training) => {
+            Json(training).into_response()
+        }
     }
 }

@@ -1,3 +1,5 @@
+import { EventBus } from "../EventBus.js";
+
 class AgentDetailsRenderer {
     currentDetails = null
     wrapper = null;
@@ -187,3 +189,5 @@ class AgentDetailsRenderer {
         return neuronEl;
     }
 }
+
+export { AgentDetailsRenderer }

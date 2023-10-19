@@ -79,3 +79,5 @@ const WorkerMessageBus = function(workers) {
         publish: bus.publish.bind(bus)
     }
 }
+
+export { WorkerMessageBus }

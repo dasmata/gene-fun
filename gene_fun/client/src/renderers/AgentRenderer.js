@@ -1,3 +1,6 @@
+import { EventBus } from "../EventBus.js";
+import { Board } from "../scope/Board.js";
+
 class AgentRenderer {
     activeAgent;
     constructor(ctx) {
@@ -21,3 +24,5 @@ class AgentRenderer {
         }
     }
 }
+
+export { AgentRenderer }

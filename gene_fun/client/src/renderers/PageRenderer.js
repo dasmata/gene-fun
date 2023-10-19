@@ -1,3 +1,5 @@
+import { EventBus } from "../EventBus.js";
+
 class PageRenderer {
     killBtn;
     createBtn;
@@ -122,3 +124,5 @@ class PageRenderer {
         this.playBtn.addEventListener('click', this.playClickHandler);
     }
 }
+
+export { PageRenderer }

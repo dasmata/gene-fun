@@ -1,4 +1,4 @@
-use bson::{to_document};
+use bson::{bson, Bson, to_document, Document};
 use chrono::{Utc};
 use futures_util::{AsyncReadExt, TryFutureExt};
 use mongodb::{Collection};
@@ -23,15 +23,12 @@ impl TrainingService {
             Ok(data) => data,
             Err(_) => panic!("Could not query the trainings collection")
         };
+
         match training_data {
             None => None,
-            Some(data) => Some(Training {
-                id: data.get("id").unwrap().to_string(),
-                name: data.get("name").unwrap().to_string(),
-                start_date: data.get("start_date").unwrap().as_i64().unwrap(),
-                runs: 0,
-                user_id: data.get("id").unwrap().to_string()
-            })
+            Some(data) => {
+                Some(bson::from_bson(Bson::Document(data)).unwrap())
+            }
         }
     }
 

@@ -1,3 +1,6 @@
+import { Observable } from "./Observable.js";
+import { Genes } from "./Genes.js";
+import { Brain } from "./Brain.js";
 
 class Agent extends Observable {
     genes = [];
@@ -8,7 +11,6 @@ class Agent extends Observable {
     observers = new Set();
     alive = null;
     brain = null;
-    requestedActions = [];
     parents = [];
     actionsAggregator = () => {};
     
@@ -58,7 +60,7 @@ class Agent extends Observable {
     }
 
     updateGenesFromConnections(connections) {
-        Object.keys(connections).forEach((key, idx) => {
+        Object.keys(connections).forEach((key) => {
             connections[key].forEach(dest => {
                 const val = dest[1];
                 this.genes[dest[2]][3] = val;
@@ -66,12 +68,6 @@ class Agent extends Observable {
             })
         })
     }
-
-    visualizeNeurons() {
-        this.update();
-    }
-
-
     die(){
         this.alive = false;
         this.oldActionValue = this.actionValue
@@ -91,3 +87,5 @@ class Agent extends Observable {
         }
     }
 }
+
+export { Agent }

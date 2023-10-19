@@ -1,9 +1,18 @@
-use bson::{to_document};
+use bson::{to_document, Bson, doc, bson};
 use chrono::{Utc};
-use futures_util::{AsyncReadExt, TryFutureExt};
-use mongodb::{Collection};
+use futures_util::{AsyncReadExt, TryFutureExt, TryStreamExt};
+use mongodb::{Collection, options::FindOptions};
 use uuid::Uuid;
 use crate::api::models::Population::{CreatePopulationParams, Population};
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Serialize)]
+pub struct Filters {
+    offset: Option<u64>,
+    limit: Option<i64>,
+    training: Option<String>
+}
+
 
 pub struct PopulationService {
     collection: Collection::<bson::Document>
@@ -13,6 +22,51 @@ impl PopulationService {
     pub fn new(collection: Collection<bson::Document>) -> PopulationService {
         PopulationService { collection }
     }
+
+    pub async fn get_all_populations(&self, filters: Filters) -> Vec<Population> {
+        let options = FindOptions::builder()
+            .limit(filters.limit.unwrap_or(20))
+            .skip(filters.offset.unwrap_or(0))
+            .sort(doc! {"date": -1})
+            .build();
+
+        let mut filter_doc = doc! {};
+        match filters.training {
+            None => {},
+            Some(val) => {
+                filter_doc.insert("training", val);
+            }
+        };
+        let query_result = self.collection.find(filter_doc, options).await;
+        let mut populations_data = match query_result {
+            Ok(data) => data,
+            Err(_) => panic!("Could not query the populations")
+        };
+
+        let mut result_vec: Vec<Population> = vec![];
+
+        while let Some(result) = populations_data.try_next().await.unwrap() {
+            result_vec.push(bson::from_bson(Bson::Document(result)).unwrap());
+        }
+
+       result_vec
+    }
+
+    pub async fn get_population(&self, id: &str) -> Option<Population> {
+        let query_result = self.collection.find_one(bson::doc! {"id": id.to_owned()}, None).await;
+        let training_data = match query_result {
+            Ok(data) => data,
+            Err(_) => panic!("Could not query the populations")
+        };
+
+        match training_data {
+            None => None,
+            Some(data) => {
+                Some(bson::from_bson(Bson::Document(data)).unwrap())
+            }
+        }
+    }
+
     pub async fn create(&self, population_data: CreatePopulationParams) -> Option<Population> {
         let pop = Population {
             id: Uuid::new_v4().to_string(),

@@ -1,3 +1,6 @@
+import { Observable } from "./Observable.js";
+import { Genes } from "./Genes.js";
+
 class Brain extends Observable {
     levels = []
     connections = {};
@@ -24,8 +27,7 @@ class Brain extends Observable {
     }
 
     compute() {
-        const totalLevels = this.levels.length - 1;
-        const results = this.levels.reduce((lvlResults, lvl, i) => {
+        const results = this.levels.reduce((lvlResults, lvl) => {
             if (lvlResults) {
                 lvl.forEach(neuron => {
                     const connections = this.connectionsDestIdx[neuron.id];
@@ -97,13 +99,13 @@ class Brain extends Observable {
         return this.connections;
     }
 
-    updateConnectionsWeight(destNeuronId, reward, changed = []) {
+    updateConnectionsWeight(destNeuronId, reward) {
         const computed = [];
-        this.connectionsDestIdx[destNeuronId].forEach((connection, idxDest) => {
+        this.connectionsDestIdx[destNeuronId].forEach((connection) => {
             connection[1] = Math.min(Math.max(connection[1] + reward, Genes.weightInterval[0]), Genes.weightInterval[1]);
             // for multiple connections between same neurons, only apply de reward once to each connection
             if(!computed.includes(connection[0])){
-                this.connections[connection[0]].forEach((conn, idxSource) => {
+                this.connections[connection[0]].forEach((conn) => {
                     if(conn[0] === destNeuronId){
                         // if there are multiple connection the new weight value must be calculated for each one
                         conn[1] = Math.min(Math.max(conn[1] + reward, Genes.weightInterval[0]), Genes.weightInterval[1]);
@@ -118,3 +120,5 @@ class Brain extends Observable {
         })
     }
 }
+
+export { Brain }

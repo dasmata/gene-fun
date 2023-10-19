@@ -33,3 +33,5 @@ const seeDownNeuron = function (agent) {
         return this.defaultVal;
     }
 }
+
+export { seeDownNeuron }

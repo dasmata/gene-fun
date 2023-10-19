@@ -34,3 +34,5 @@ const seeLeftNeuron = function (agent) {
         return wallDistance
     }
 }
+
+export { seeLeftNeuron }

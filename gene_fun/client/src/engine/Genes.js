@@ -48,7 +48,7 @@ class Genes extends Array {
             }
         } else {
             let cursor = 0
-            this.connectionMethods.forEach((levels, idx) => {
+            this.connectionMethods.forEach((levels) => {
                 for(let i = 0; i <= this.limits[levels[0]]; i++){
                     this.push(this.parents[Math.round(Math.random())][cursor++]);
                 }
@@ -58,14 +58,6 @@ class Genes extends Array {
 
     generateGenes() {
         if(this.useRandomNeuronConnections){
-            // this.push([0,0,0,1,1]);
-            // this.push([1,1,0,1,1]);
-            // this.push([2,2,0,1,1]);
-            // this.push([3,3,0,1,1]);
-            // this.push([0,0,1,1,1]);
-            // this.push([1,2,1,1,1]);
-            // this.push([2,2,1,1,1]);
-            // this.push([3,3,1,1,1]);
             for(let i = 0; i < this.size; i++){
                 this.createGene();
             }
@@ -124,3 +116,5 @@ class Genes extends Array {
 
 Genes.mutationFactor = 1000;
 Genes.weightInterval = [-100, 100];
+
+export { Genes }

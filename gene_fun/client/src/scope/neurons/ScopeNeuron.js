@@ -1,3 +1,5 @@
+import { GenericNeuron } from "../../engine/GenericNeuron.js";
+
 class ScopeNeuron extends GenericNeuron {
     ctx;
     constructor(...args){
@@ -9,4 +11,4 @@ class ScopeNeuron extends GenericNeuron {
     }
 }
 
-( self || {} ).ScopeNeuron = ScopeNeuron;
+export { ScopeNeuron }

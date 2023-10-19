@@ -1,3 +1,5 @@
+import { Board } from "./Board.js";
+
 class SpawningBounds {
     areaData = [];
     totalSpawnArea = 0;
@@ -44,3 +46,5 @@ class SpawningBounds {
         }
     }
 }
+
+export { SpawningBounds }

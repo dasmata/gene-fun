@@ -1,3 +1,5 @@
+import { shuffle } from "./utils.js";
+
 class Population extends Set {
     populationSize;
     supervisor;
@@ -49,18 +51,9 @@ class Population extends Set {
         }
         return this;
     }
-
-    find(callback){
-        const finds = new this.constructor(this.supervisor, this.populationSize, this.agentGenerator)
-        this.forEach((agent) => {
-            if(callback(agent)){
-                finds.add(agent, true);
-            }
-        });
-        return finds;
-    }
-
     toJSON(){
         return Array.from(this).map(el => el.toJSON());
     }
 }
+
+export { Population }

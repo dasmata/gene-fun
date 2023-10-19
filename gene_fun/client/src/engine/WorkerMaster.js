@@ -1,7 +1,4 @@
-importScripts(
-    'WorkerMessageBus.js',
-    'utils.js'
-)
+import { WorkerMessageBus } from "./WorkerMessageBus.js";
 
 class WorkerMaster {
     workers;
@@ -23,7 +20,7 @@ class WorkerMaster {
         const maxWorkers = ~~(navigator.hardwareConcurrency * payload.config.workers);
         const workersNum = payload.populationSize < maxWorkers ? payload.populationSize : maxWorkers;
         for(let i = 0; i < workersNum; i++){
-            this.workers[i] = new Worker('UpdateWorker.js');
+            this.workers[i] = new Worker('UpdateWorker.js', { type: 'module', name: `UpdateWorker${i}` });
         }
         this.messageBus = WorkerMessageBus(this.workers);
 

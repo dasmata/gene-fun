@@ -34,3 +34,5 @@ const seeUpNeuron = function (agent, input, weight) {
         return wallDistance
     }
 }
+
+export { seeUpNeuron }

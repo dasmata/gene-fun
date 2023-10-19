@@ -4,3 +4,5 @@ const customSigmoidNeuron = function (agent, input){
     }
     return Math.round(1 / (1 + Math.exp(input * -1)));
 }
+
+export { customSigmoidNeuron }

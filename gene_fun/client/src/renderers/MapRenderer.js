@@ -1,4 +1,9 @@
-class MapRenderer extends Observable{
+import { AgentRenderer } from "./AgentRenderer.js";
+import { WallRenderer } from "./WallRenderer.js";
+import { AreaRenderer } from "./AreaRenderer.js";
+import { EventBus } from "../EventBus.js";
+
+class MapRenderer {
     container = null;
     agentRenderer = null;
     wallRenderer = null;
@@ -7,7 +12,6 @@ class MapRenderer extends Observable{
     animationFrameRequest;
 
     constructor(map) {
-        super();
         this.map = map;
         this.frameRenderer = this.renderMap.bind(this);
     }
@@ -98,3 +102,5 @@ class MapRenderer extends Observable{
         this.unsubscribeStopRender?.();
     }
 }
+
+export { MapRenderer }

@@ -1,3 +1,5 @@
+import { Observable } from "./Observable.js";
+
 class Supervisor extends Observable {
     size = {
         width: null,
@@ -84,3 +86,5 @@ class Supervisor extends Observable {
         this.status = 0
     }
 }
+
+export { Supervisor }

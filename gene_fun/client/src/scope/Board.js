@@ -1,3 +1,9 @@
+import { SpawningBounds } from "./SpawningBounds.js";
+import { Observable } from "../engine/Observable.js";
+import { EventBus } from "../EventBus.js";
+import { Vector } from "./Vector.js";
+import { shuffle } from "../engine/utils.js";
+
 class Board extends Observable{
     size = {
         width: 0,
@@ -270,3 +276,5 @@ Board.getAgentCoords = (bounds, vectorBase, validationFunction) => {
 }
 
 Board.agentSize = 2;
+
+export { Board }

@@ -1,9 +1,9 @@
-SUMMATION_TYPE_AVG = 1;
-SUMMATION_TYPE_TOTAL = 2;
-SUMMATION_TYPE_MULTIPLICATION = 3;
-SUMMATION_TYPE_MAX = 4;
-SUMMATION_TYPE_MIN = 5;
-SUMMATION_TYPE_INCREMENTAL_TOTAL = 6;
+const SUMMATION_TYPE_AVG = 1;
+const SUMMATION_TYPE_TOTAL = 2;
+const SUMMATION_TYPE_MULTIPLICATION = 3;
+const SUMMATION_TYPE_MAX = 4;
+const SUMMATION_TYPE_MIN = 5;
+const SUMMATION_TYPE_INCREMENTAL_TOTAL = 6;
 
 const incrementalGenerator = function* (summationFunction){
     let prev = 0, inputs, weights;
@@ -81,3 +81,13 @@ class GenericNeuron {
     }
 }
 ( self || {} ).GenericNeuron = GenericNeuron;
+
+export {
+    SUMMATION_TYPE_AVG,
+    SUMMATION_TYPE_MIN,
+    SUMMATION_TYPE_TOTAL,
+    SUMMATION_TYPE_MULTIPLICATION,
+    SUMMATION_TYPE_INCREMENTAL_TOTAL,
+    SUMMATION_TYPE_MAX,
+    GenericNeuron
+}

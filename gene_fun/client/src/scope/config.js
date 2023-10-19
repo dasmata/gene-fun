@@ -1,3 +1,5 @@
+import { Vector } from "./Vector.js"
+
 const size = {
     width: 256,
     height: 256
@@ -292,3 +294,6 @@ const config = {
         }
     ]
 }
+
+
+export { config }

@@ -42,3 +42,5 @@ AreaRenderer.colors = [
     '#66FF66',
     '#FFFF66'
 ]
+
+export { AreaRenderer }
