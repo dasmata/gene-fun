@@ -23,9 +23,9 @@ class StatsRenderer {
         if(!this.wrapper.contains(this.statsElement)){
             this.wrapper.appendChild(this.statsElement);
         }
-        this.genMarkerElement.textContent = this.generationsNr;
-        this.generationsNr++;
-        this.unsubscribeStopRender = EventBus.subscribe('stopRender', this.clear.bind(this));
+        // this.genMarkerElement.textContent = this.generationsNr;
+        // this.generationsNr++;
+        // this.unsubscribeStopRender = EventBus.subscribe('stopRender', this.clear.bind(this));
     }
 
     renderGenerationStats(stats){

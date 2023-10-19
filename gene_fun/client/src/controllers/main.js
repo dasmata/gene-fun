@@ -1,13 +1,16 @@
 import { MapRenderer } from "../renderers/MapRenderer.js";
 import { AgentDetailsRenderer } from "../renderers/AgentDetailsRenderer.js";
 import { StatsRenderer } from "../renderers/StatsRenderer.js";
-import { PageRenderer } from "../renderers/PageRenderer.js";
 import { Vector } from "../scope/Vector.js";
 import { Board } from "../scope/Board.js";
 import { neuronPool } from "../scope/neurons/neuronPool.js";
 import { EventBus } from "../EventBus.js";
 import { FileWriter } from "../FileWriter.js";
 import { config } from "../scope/config.js";
+
+
+import "../Components/controls/Controls.js"
+import "../Components/import/Import.js"
 
 
 let startMark = null
@@ -53,10 +56,10 @@ class Page {
 
     map;
 
+    controlsView;
     mapRenderer;
     detailsRenderer;
     statsRenderer;
-    pageRenderer;
 
     neuronTypes;
     population;
@@ -75,7 +78,13 @@ class Page {
         this.update = this.update.bind(this);
         this.neuronTypes = {};
         this.population = [];
-        this.pageRenderer = new PageRenderer(this);
+
+        this.controlsView = document.querySelector("controls-view");
+        this.controlsView.setAttribute('actions', `${this.actions}`);
+        this.controlsView.setAttribute('gene-number', `${this.geneNumber}`);
+        this.controlsView.setAttribute('survivability-threshold', `${this.survivabilityThreshold}`);
+
+
         EventBus.subscribe('paramChange', e => {
             if(typeof this[e.name] !== 'undefined'){
                 this[e.name] = e.value;
@@ -412,7 +421,7 @@ class Page {
                 type: 'importAgents',
                 payload: agents
             });
-            this.pageRenderer.setReadyState();
+            this.controlsView.setReadyState();
         };
         const unsubscribe = EventBus.subscribe('ready', readyCallback);
     }

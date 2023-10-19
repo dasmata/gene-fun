@@ -18,45 +18,57 @@
                 <span class="slider round"></span>
             </label>
         </fieldset>
-        <fieldset>
-            <legend>Controls</legend>
-            <span>Gen <span id="gen">0</span></span>
-            <button id="killSw">Kill everyone!!</button>
-            <button id="start">create</button>
-            <button id="play">play</button>
-            <button id="pause">pause</button>
-            <label>
-                <span>Level: </span>
-                <input name="level" type="number" id="level-indicator" min="0" />
-            </label>
-            <label>
-                <span>Actions: </span>
-                <input name="actions" type="range" min="1" max="10000" id="actions-slider" oninput="this.nextElementSibling.value = this.value" />
-                <output></output>
-            </label>
-            <label>
-                <span>Gene nr: </span>
-                <input name="geneNumber" type="range" id="genes-slider" max="200" min="1" oninput="this.nextElementSibling.value = this.value" />
-                <output></output>
-            </label>
-            <label>
-                <span>Min survivability: </span>
-                <input name="survivabilityThreshold" type="range" id="survivability-slider" oninput="this.nextElementSibling.value = this.value" />
-                <output></output>
-            </label>
-        </fieldset>
-
-        <fieldset id="import-export">
-            <legend>Import / Export agents</legend>
-            <button id="save-current">Save current population</button>
-            <button id="save-best">Save best population</button>
-            <label>
-                <span>Import agents<br /><sub>(json format)<sub></span>
-                <input type="file" id="import-population" />
-            </label>
-        </fieldset>
+        <controls-view></controls-view>
+        <import-view></import-view>
     </section>
 </main>
+<template id="import-tpl">
+    <style>
+        @import "src/Components/import/main.css";
+    </style>
+    <fieldset id="import-export">
+        <legend>Import / Export agents</legend>
+        <button id="save-current">Save current population</button>
+        <button id="save-best">Save best population</button>
+        <label>
+            <span>Import agents<br /><sub>(json format)<sub></span>
+            <input type="file" id="import-population" />
+        </label>
+    </fieldset>
+</template>
+
+<template id="controls-tpl">
+    <style>
+        @import "src/Components/controls/main.css";
+    </style>
+    <fieldset>
+        <legend>Controls</legend>
+        <span>Gen <span id="gen">0</span></span>
+        <button id="killSw">Kill everyone!!</button>
+        <button id="start">create</button>
+        <button id="play">play</button>
+        <button id="pause">pause</button>
+        <label>
+            <span>Level: </span>
+            <input name="level" type="number" id="level-indicator" min="0" />
+        </label>
+        <label>
+            <span>Actions: </span>
+            <input name="actions" type="range" min="1" max="10000" id="actions-slider" oninput="this.nextElementSibling.value = this.value" />
+            <output></output>
+        </label>
+        <label>
+            <span>Gene nr: </span>
+            <input name="geneNumber" type="range" id="genes-slider" max="200" min="1" oninput="this.nextElementSibling.value = this.value" />
+            <output></output>
+        </label>
+        <label>
+            <span>Min survivability: </span>
+            <input name="survivabilityThreshold" type="range" id="survivability-slider" oninput="this.nextElementSibling.value = this.value" />
+            <output></output>
+        </label>
+    </fieldset>
+</template>
 <template id="agent">
     <div>
         <fieldset id="details-container">
@@ -88,5 +100,6 @@
         </div>
     </fieldset>
 </template>
+
 </body>
 </html>

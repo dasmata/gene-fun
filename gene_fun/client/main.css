@@ -66,7 +66,13 @@ input:checked + .slider:before {
 
 :root {
     --neuron-size: 40px;
+    --section-width: 530px;
 }
+
+controls-view, import-view {
+    width: var(--section-width);
+}
+
 h1,h2,h3,h4 {
     padding: 0;
     margin: 0;
@@ -88,15 +94,12 @@ main {
     position: absolute;
 }
 fieldset {
-    width: 530px;
+    width: var(--section-width)
 }
+
 #canvas-wrapper {
     width: calc(256px * (2 + 2));
     position: relative;
-}
-#controls {
-    width: 400px;
-    padding-left: 5px;
 }
 fieldset label, .stats .stats-row {
     margin-top: 5px;
