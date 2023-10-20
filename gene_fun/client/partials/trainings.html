@@ -1,0 +1,38 @@
+<trainings-list-view></trainings-list-view>
+
+<template id="trainings-list-tpl">
+    <style>
+        ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 15px;
+    }
+    </style>
+    <h1>Trainings</h1>
+    <ul class="training-list">
+
+    </ul>
+</template>
+<template id="training-tpl">
+    <style>
+        li {
+        cursor: pointer;
+        display: block;
+        border: 1px solid hotpink;
+        padding: 15px;
+        width:200px;
+        height: 200px;
+    }
+        h2 {
+        margin:0;
+        padding:0;
+    }
+    </style>
+    <li>
+        <h2 class="name"></h2>
+        <div class="author"></div>
+        <div class="date"></div>
+    </li>
+</template>

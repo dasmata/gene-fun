@@ -4,6 +4,7 @@ import { neuronPool } from "../scope/neurons/neuronPool.js";
 import { EventBus } from "../EventBus.js";
 import { FileWriter } from "../FileWriter.js";
 import { config } from "../scope/config.js";
+import { Base } from "./Base.js";
 
 import "../Components/controls/Controls.js";
 import "../Components/import/Import.js";
@@ -70,7 +71,7 @@ class Page {
     bestPopulation = [];
 
     constructor(config){
-        this.config = config;
+        this.setConfig(config);
         Object.keys(methodEventsMap).forEach(messageType => {
             EventBus.subscribe(messageType, this[methodEventsMap[messageType]].bind(this));
         });
@@ -102,6 +103,13 @@ class Page {
                 )
             }
         });
+    }
+
+    setConfig(config){
+        this.config = config;
+        this.actions = config.actions;
+        this.level = config.level;
+        this.survivabilityThreshold = config.minSurvivability;
     }
 
     createMap() {
@@ -456,8 +464,36 @@ class Page {
         EventBus.publish(e.data?.type || e.type, e);
     }
 }
-const page = new Page(config);
+
+class BoardController extends Base {
+    _page;
+
+    async init() {
+        const training = window.history.state?.training;
+        let population;
+
+        if (training) {
+            const service = await this._serviceContainer.get('population')
+            population = await service.getAll(1, {
+                filters: {training: training.id},
+                perPage: 1
+            });
+            config.actions = population[0].actions;
+            config.level = population[0].level;
+            config.minSurvivability = population[0].min_survivability;
+            config.neurons = population[0].neurons;
+        }
+        this._page = new Page(config);
+        if (population) {
+            this._page.importAgents(population[0].agents)
+        }
+        this.hideLoader();
+    }
+}
+
+BoardController.layout = 'main';
+BoardController.partial = 'board';
 
 export {
-    page
+    BoardController as Board
 }

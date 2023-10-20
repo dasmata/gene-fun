@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use axum::{Extension, Json, Router};
 use axum::http::StatusCode;
-use axum::routing::{get, post};
+use axum::routing::{get};
 use crate::api::AppState;
-use crate::api::models::User::{CreateUser, User};
+use crate::api::models::User::{User};
 
 #[path = "../models/User.rs"]
 mod user;
@@ -24,9 +24,9 @@ async fn get_current(Extension(state): Extension<Arc<AppState>>) -> (StatusCode,
 }
 
 
-async fn create_user(Json(payload): Json<CreateUser>, Extension(state): Extension<Arc<AppState>>) -> (StatusCode, Json<User>) {
-    let user = state.service_container.user.create("bbb").await;
+// async fn create_user(Json(payload): Json<CreateUser>, Extension(state): Extension<Arc<AppState>>) -> (StatusCode, Json<User>) {
+//     let user = state.service_container.user.create("bbb").await;
     // this will be converted into a JSON response
     // with a status code of `201 Created`
-    (StatusCode::CREATED, Json(user))
-}
+    // (StatusCode::CREATED, Json(user))
+// }

@@ -1,14 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-
-    <script type="module" src="src/controllers/main.js"></script>
-    <link href="main.css" rel="stylesheet" type="text/css">
-</head>
-<body>
-<main>
     <section id="canvas-wrapper">
         <board-view></board-view>
     </section>
@@ -18,18 +7,17 @@
         <stats-view></stats-view>
         <agent-details-view></agent-details-view>
     </section>
-</main>
 
 <template id="board-tpl">
     <style>
-        @import "src/Components/board/board.css";
+        @import "../src/Components/board/board.css";
     </style>
     <canvas class="breeding-area"></canvas>
     <canvas class="map"></canvas>
 </template>
 <template id="import-tpl">
     <style>
-        @import "src/Components/import/main.css";
+        @import "../src/Components/import/main.css";
     </style>
     <fieldset id="import-export">
         <legend>Import / Export agents</legend>
@@ -44,7 +32,7 @@
 
 <template id="controls-tpl">
     <style>
-        @import "src/Components/controls/main.css";
+        @import "../src/Components/controls/main.css";
     </style>
     <fieldset>
         <legend>Controls</legend>
@@ -76,7 +64,7 @@
 
 <template id="agent-tpl">
     <style>
-        @import "src/Components/agentDetails/agentDetails.css";
+        @import "../src/Components/agentDetails/agentDetails.css";
     </style>
     <div>
         <fieldset id="details-container">
@@ -140,7 +128,7 @@
 
 <template id="stats-tpl">
     <style>
-        @import "src/Components/stats/stats.css";
+        @import "../src/Components/stats/stats.css";
     </style>
     <fieldset class="stats">
         <legend>Stats</legend>
@@ -149,13 +137,10 @@
 
 <template id="stats-row-tpl">
     <style>
-        @import "src/Components/stats/statsRow.css";
+        @import "../src/Components/stats/statsRow.css";
     </style>
     <div class="stats-row">
         <div class="stats-label"></div>
         <div class="stats-value"></div>
     </div>
 </template>
-
-</body>
-</html>

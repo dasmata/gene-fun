@@ -14,7 +14,7 @@ impl UserService {
         UserService { collection }
     }
 
-    pub async fn getUser(&self, username: &str) -> () {
+    pub async fn get_user(&self, _username: &str) -> () {
 
     }
 

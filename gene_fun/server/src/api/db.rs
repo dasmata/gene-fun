@@ -2,7 +2,6 @@ use mongodb::{Client, Database, options::ClientOptions, error::Error};
 use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
-use axum::Json;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
