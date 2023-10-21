@@ -1,0 +1,65 @@
+<trainings-list-view></trainings-list-view>
+<new-training-form-view></new-training-form-view>
+<template id="new-training-form-tpl">
+    <dialog>
+        <form>
+            <label>
+                <span>Name: </span>
+                <input type="text" name="name" />
+            </label>
+            <div>
+                <button id="submit-training">Create</button>
+                <button id="cancel">Cancel</button>
+            </div>
+        </form>
+    </dialog>
+</template>
+<template id="trainings-list-tpl">
+    <style>
+        ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        gap: 15px;
+    }
+    </style>
+    <h1>Trainings</h1>
+    <button>New Training</button>
+    <ul class="training-list">
+
+    </ul>
+</template>
+<template id="training-tpl">
+    <style>
+        li {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            border: 1px solid hotpink;
+            padding: 15px;
+            width:200px;
+            height: 200px;
+        }
+        h2 {
+            margin:0;
+            padding:0;
+        }
+        .footer {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+        }
+    </style>
+    <li>
+        <div class="content">
+            <h2 class="name"></h2>
+            <div class="author"></div>
+            <div class="date"></div>
+        </div>
+        <div class="footer">
+            <button id="delete">delete</button>
+        </div>
+    </li>
+</template>

@@ -1,6 +1,6 @@
-use bson::{to_document, Bson, doc, bson};
+use bson::{to_document, Bson, doc};
 use chrono::{Utc};
-use futures_util::{AsyncReadExt, TryFutureExt, TryStreamExt};
+use futures_util::{TryStreamExt};
 use mongodb::{Collection, options::FindOptions};
 use uuid::Uuid;
 use crate::api::models::Population::{CreatePopulationParams, Population};
@@ -22,7 +22,6 @@ impl PopulationService {
     pub fn new(collection: Collection<bson::Document>) -> PopulationService {
         PopulationService { collection }
     }
-
     pub async fn get_all_populations(&self, filters: Filters) -> Vec<Population> {
         let options = FindOptions::builder()
             .limit(filters.limit.unwrap_or(20))

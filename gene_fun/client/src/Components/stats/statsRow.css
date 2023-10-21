@@ -1,0 +1,9 @@
+.stats-label {
+    display: block;
+    width: 150px;
+}
+
+.stats-row {
+    margin-top: 5px;
+    display: flex;
+}

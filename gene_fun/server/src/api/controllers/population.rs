@@ -6,7 +6,7 @@ use axum::http::StatusCode;
 use axum::routing::{get, post};
 use axum::response::IntoResponse;
 use crate::api::AppState;
-use crate::api::models::Population::{CreatePopulationParams, Population};
+use crate::api::models::Population::{CreatePopulationParams};
 use crate::api::services::PopulationService::Filters;
 
 pub fn get_router(Extension(state): Extension<Arc<AppState>>) -> Router {

@@ -1,12 +1,21 @@
-use bson::{bson, Bson, to_document, Document};
+use bson::{Bson, to_document, doc};
 use chrono::{Utc};
-use futures_util::{AsyncReadExt, TryFutureExt};
-use mongodb::{Collection};
+use futures_util::{TryStreamExt};
+use mongodb::{Collection, options::FindOptions};
+use mongodb::results::DeleteResult;
 use uuid::Uuid;
 use models::{Training::Training};
+use serde::{Deserialize, Serialize};
 
 #[path = "../models/mod.rs"]
 mod models;
+
+#[derive(Deserialize, Serialize)]
+pub struct Filters {
+    offset: Option<u64>,
+    limit: Option<i64>,
+    user: Option<String>
+}
 
 pub struct TrainingService {
     collection: Collection::<bson::Document>
@@ -15,6 +24,35 @@ pub struct TrainingService {
 impl TrainingService {
     pub fn new(collection: Collection<bson::Document>) -> TrainingService {
         TrainingService { collection }
+    }
+
+    pub async fn get_all_trainings(&self, filters: Filters) -> Vec<Training> {
+        let options = FindOptions::builder()
+            .limit(filters.limit.unwrap_or(20))
+            .skip(filters.offset.unwrap_or(0))
+            .sort(doc! {"start_date": -1})
+            .build();
+
+        let mut filter_doc = doc! {};
+        match filters.user {
+            None => {},
+            Some(val) => {
+                filter_doc.insert("user_id", val);
+            }
+        };
+        let query_result = self.collection.find(filter_doc, options).await;
+        let mut trainings_data = match query_result {
+            Ok(data) => data,
+            Err(_) => panic!("Could not query the trainings")
+        };
+
+        let mut result_vec: Vec<Training> = vec![];
+
+        while let Some(result) = trainings_data.try_next().await.unwrap() {
+            result_vec.push(bson::from_bson(Bson::Document(result)).unwrap());
+        }
+
+        result_vec
     }
 
     pub async fn get_training(&self, id: &str) -> Option<Training> {
@@ -52,5 +90,13 @@ impl TrainingService {
             Err(_) => panic!("Could not insert training")
         }
         Some(training)
+    }
+
+    pub async fn delete_training(&self, id: &str) -> bool {
+        let query_result = self.collection.delete_one(bson::doc! {"id": id.to_owned()}, None).await;
+        match query_result {
+            Ok(_) => true,
+            Err(_) => false
+        }
     }
 }

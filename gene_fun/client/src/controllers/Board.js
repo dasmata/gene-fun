@@ -1,13 +1,16 @@
-import { MapRenderer } from "../renderers/MapRenderer.js";
-import { AgentDetailsRenderer } from "../renderers/AgentDetailsRenderer.js";
-import { StatsRenderer } from "../renderers/StatsRenderer.js";
-import { PageRenderer } from "../renderers/PageRenderer.js";
 import { Vector } from "../scope/Vector.js";
 import { Board } from "../scope/Board.js";
 import { neuronPool } from "../scope/neurons/neuronPool.js";
 import { EventBus } from "../EventBus.js";
 import { FileWriter } from "../FileWriter.js";
 import { config } from "../scope/config.js";
+import { Base } from "./Base.js";
+
+import "../Components/controls/Controls.js";
+import "../Components/import/Import.js";
+import "../Components/stats/Stats.js";
+import "../Components/agentDetails/AgendDetails.js";
+import "../Components/board/Board.js";
 
 
 let startMark = null
@@ -43,20 +46,23 @@ const methodEventsMap = {
     importAgents: 'importAgents'
 }
 
+/**
+ * This is an ABOMINATION. It should be shot like a horse with a broken leg
+ */
 
-class Page {
+class Page extends Base {
     actions = 2000;
     populationSize = 1000;
     geneNumber = 30;
     survivabilityThreshold = 60;
     level = 0;
+    generationNr = 0;
 
     map;
 
-    mapRenderer;
-    detailsRenderer;
-    statsRenderer;
-    pageRenderer;
+    controlsView;
+    statsView;
+    boardView;
 
     neuronTypes;
     population;
@@ -67,15 +73,54 @@ class Page {
 
     bestPopulation = [];
 
-    constructor(config){
-        this.config = config;
+    constructor(serviceContainer){
+        super(serviceContainer);
         Object.keys(methodEventsMap).forEach(messageType => {
             EventBus.subscribe(messageType, this[methodEventsMap[messageType]].bind(this));
         });
         this.update = this.update.bind(this);
         this.neuronTypes = {};
         this.population = [];
-        this.pageRenderer = new PageRenderer(this);
+    }
+
+    async init() {
+        const training = window.history.state?.training;
+        let population;
+
+        if (training) {
+            const service = await this._serviceContainer.get('population')
+            population = await service.getAll(1, {
+                filters: {training: training.id},
+                perPage: 1
+            });
+            if (population.length) {
+                config.actions = population[0].actions;
+                config.level = population[0].level;
+                config.minSurvivability = population[0].min_survivability;
+                config.neurons = population[0].neurons;
+            }
+        }
+        this.setConfig(config);
+        this.initGame();
+        if (population.length) {
+            this.importAgents(population[0].agents)
+        }
+        this.hideLoader();
+    }
+
+    initGame() {
+        this.controlsView = document.querySelector("controls-view");
+        this.statsView = document.querySelector('stats-view');
+        this.agentDetailsView = document.querySelector('agent-details-view');
+        this.boardView = document.querySelector('board-view');
+
+
+        this.controlsView.setAttribute('actions', `${this.actions}`);
+        this.controlsView.setAttribute('gene-number', `${this.geneNumber}`);
+        this.controlsView.setAttribute('survivability-threshold', `${this.survivabilityThreshold}`);
+
+
+
         EventBus.subscribe('paramChange', e => {
             if(typeof this[e.name] !== 'undefined'){
                 this[e.name] = e.value;
@@ -88,6 +133,13 @@ class Page {
                 )
             }
         });
+    }
+
+    setConfig(config){
+        this.config = config;
+        this.actions = config.actions;
+        this.level = config.level;
+        this.survivabilityThreshold = config.minSurvivability;
     }
 
     createMap() {
@@ -123,6 +175,7 @@ class Page {
     }
 
     createHandler(){
+        this.showLoader();
         this.createMap();
         this.status = STATUS_INITIALIZED;
         this.updateWorker = new Worker(
@@ -162,10 +215,10 @@ class Page {
 
     handleWorkerReady(){
         this.map.setPopulation(this.population);
-        this.statsRenderer?.render({
-            armageddonStats: this.armageddonStats,
-            population: this.population.length
-        });
+
+        this.updateStats();
+        this.agentDetailsView.neurons = this.neuronTypes;
+
         this.map.placeAgentsOnMap();
         if (this.status === STATUS_RUNNING) {
             this.playHandler();
@@ -178,6 +231,7 @@ class Page {
                 console.log('Agents set on map');
             })
         }
+        this.hideLoader();
     }
 
     agentClickHandler({ agent }){
@@ -218,7 +272,8 @@ class Page {
         const computeResults = e.data.payload;
         if(this.selectedAgent.id){
             setTimeout(() => {
-                this.detailsRenderer.update(computeResults[this.selectedAgent.id])
+                this.agentDetailsView.agent = computeResults[this.selectedAgent.id].agent;
+                this.agentDetailsView.results = computeResults[this.selectedAgent.id].results;
             });
         }
         const results = Object.values(computeResults).map(entry => {
@@ -249,6 +304,7 @@ class Page {
             survivability,
             maxSurvivability: Math.max(this.armageddonStats?.maxSurvivability || 0, survivability)
         };
+        this.generationNr++;
         if (survivability > this.survivabilityThreshold){
             try {
                 this.levelUp();
@@ -276,29 +332,52 @@ class Page {
         this.mapRenderer.render();
     }
 
-    startRendering = () => {
-        this.detailsRenderer = this.detailsRenderer || new AgentDetailsRenderer(document.getElementById('controls'), this.map, this.neuronTypes);
-        this.mapRenderer = this.mapRenderer || new MapRenderer(this.map);
-        this.statsRenderer = this.statsRenderer || new StatsRenderer(document.getElementById('controls'));
+    updateStats() {
+        this.statsView.stats = [
+            {
+                label: 'Generation nr',
+                value: this.generationNr
+            },
+            {
+                label: 'Current population',
+                value: this.map.population.length
+            },
+            {
+                label: 'Old population size',
+                value: this.armageddonStats?.populationSize
+            },
+            {
+                label: 'Parents',
+                value: this.armageddonStats?.replicatorsNr
+            },
+            {
+                label: 'Survivability',
+                value: this.armageddonStats?.survivability
+            },
+            {
+                label: 'Max. survivability',
+                value: this.armageddonStats?.maxSurvivability
+            }
+        ]
+    }
 
-        this.mapRenderer.render();
-        this.statsRenderer.render({
-            population: this.map.population.length
-        });
+    startRendering = () => {
+        this.boardView.board = this.map;
+        // this.mapRenderer = this.mapRenderer || new MapRenderer(this.map);
+        this.updateStats();
+        // this.mapRenderer.render();
         this.renderAgentDetails();
     }
 
     renderAgentDetails(agent){
         this.selectedAgent = agent || [...this.map.population][~~(Math.random() * this.map.population.length - 1)];
-        this.detailsRenderer.render(this.selectedAgent);
+        this.agentDetailsView.agent = this.selectedAgent;
         EventBus.publish('selectedAgent', this.selectedAgent);
     }
 
     stopRendering(){
         EventBus.publish('stopRender');
         this.mapRenderer = null;
-        this.detailsRenderer = null;
-        this.statsRenderer = null;
     }
 
     actionAggregator(results, currentActionValue, neuronTypes) {
@@ -374,18 +453,14 @@ class Page {
                 this.neuronTypes
             );
             actionResult.reward = this.getActionReward(actionResult);
-            console.log(actionResult.reward)
             this.map.population.forEach(agent => {
                 if (agent.id === actionResult.id) {
                     agent.actionValue = actionResult.actionValue;
                     agent.oldActionValue = actionResult.oldActionValue;
                 }
             });
-
-            this.detailsRenderer.update({
-                results: response,
-                agent: actionResult
-            })
+            this.agentDetailsView.results = response;
+            this.agentDetailsView.agent = actionResult;
         });
     }
 
@@ -412,7 +487,7 @@ class Page {
                 type: 'importAgents',
                 payload: agents
             });
-            this.pageRenderer.setReadyState();
+            this.controlsView.setReadyState();
         };
         const unsubscribe = EventBus.subscribe('ready', readyCallback);
     }
@@ -421,8 +496,10 @@ class Page {
         EventBus.publish(e.data?.type || e.type, e);
     }
 }
-const page = new Page(config);
+
+Page.layout = 'main';
+Page.partial = 'board';
 
 export {
-    page
+    Page as Board
 }

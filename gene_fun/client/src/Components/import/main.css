@@ -1,0 +1,15 @@
+:host {
+    display: block;
+}
+fieldset {
+    display: block;
+    padding: 15px;
+}
+fieldset label {
+    margin-top: 5px;
+    display: flex;
+}
+fieldset label span {
+    display: block;
+    width: 150px;
+}
