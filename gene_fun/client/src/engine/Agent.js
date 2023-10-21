@@ -12,6 +12,7 @@ class Agent extends Observable {
     alive = null;
     brain = null;
     parents = [];
+    reward = 0;
     actionsAggregator = () => {};
     
     constructor(
@@ -56,6 +57,7 @@ class Agent extends Observable {
     }
 
     applyReward(reward, result) {
+        this.reward = reward;
         this.updateGenesFromConnections(this.brain.evaluate(result, reward))
     }
 
@@ -83,7 +85,8 @@ class Agent extends Observable {
             actionValue: this.actionValue,
             oldActionValue: this.oldActionValue,
             id: Symbol.keyFor(this.id),
-            genes: this.genes.toJSON()
+            genes: this.genes.toJSON(),
+            reward: this.reward
         }
     }
 }

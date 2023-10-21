@@ -62,8 +62,9 @@ async fn delete_training(
             StatusCode::NOT_FOUND.into_response()
         }
         Some(training) => {
-            let result = state.service_container.training.delete_training(&training_id).await;
-            if result {
+            let training_result = state.service_container.training.delete_training(&training_id).await;
+            if training_result {
+                state.service_container.population.delete_populations(&training_id).await;
                 StatusCode::ACCEPTED.into_response()
             } else {
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()

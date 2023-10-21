@@ -91,4 +91,12 @@ impl PopulationService {
         }
         Some(pop)
     }
+
+    pub async fn delete_populations(&self, training: &str) -> bool {
+        let query_result = self.collection.delete_many(bson::doc! {"training": training.to_owned()}, None).await;
+        match query_result {
+            Ok(_) => true,
+            Err(_) => false
+        }
+    }
 }

@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Genes {
     fingerprint: String,
-    data: Vec<[i32; 5]>
+    data: Vec<[f64; 5]>
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Agent {
     pub genes: Genes,
     pub id: String,
-    pub reward: i32
+    pub reward: Option<i32>
 }
 
 // the output to our `create_user` handler

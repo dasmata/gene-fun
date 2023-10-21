@@ -22,6 +22,13 @@ class Population {
         }
     }
 
+    async save(data) {
+        try {
+            return await this._storageService.save('population', data)
+        } catch (e) {
+            return Promise.reject();
+        }
+    }
 }
 
 Population.perPage = 20;

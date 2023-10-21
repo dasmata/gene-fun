@@ -62,17 +62,17 @@ class Index extends Base{
         const trainingService = await this._serviceContainer.get('training');
         try {
             const training = await trainingService.create(name)
-            this.navigateToTraining(training.id);
+            this.navigateToTraining(training);
         } catch (e) {
             console.log('Could not create the training', e);
         }
 
     }
 
-    navigateToTraining(trainingId) {
+    navigateToTraining(training) {
         this.navigate(window.location.pathname, {
             route: '/board',
-            training: trainingId
+            training: training
         });
     }
 
