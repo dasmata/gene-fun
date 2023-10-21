@@ -27,6 +27,8 @@ class App {
             console.log('404 Not Found!');
         }
 
+        this._page?.destroy?.();
+
         const Controller = await this._loadController(routes[route]);
         if (this._layout !== Controller.layout) {
             await this.loadLayout(Controller.layout)

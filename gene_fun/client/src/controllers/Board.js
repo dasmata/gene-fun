@@ -46,8 +46,11 @@ const methodEventsMap = {
     importAgents: 'importAgents'
 }
 
+/**
+ * This is an ABOMINATION. It should be shot like a horse with a broken leg
+ */
 
-class Page {
+class Page extends Base {
     actions = 2000;
     populationSize = 1000;
     geneNumber = 30;
@@ -70,15 +73,42 @@ class Page {
 
     bestPopulation = [];
 
-    constructor(config){
-        this.setConfig(config);
+    constructor(serviceContainer){
+        super(serviceContainer);
         Object.keys(methodEventsMap).forEach(messageType => {
             EventBus.subscribe(messageType, this[methodEventsMap[messageType]].bind(this));
         });
         this.update = this.update.bind(this);
         this.neuronTypes = {};
         this.population = [];
+    }
 
+    async init() {
+        const training = window.history.state?.training;
+        let population;
+
+        if (training) {
+            const service = await this._serviceContainer.get('population')
+            population = await service.getAll(1, {
+                filters: {training: training.id},
+                perPage: 1
+            });
+            if (population.length) {
+                config.actions = population[0].actions;
+                config.level = population[0].level;
+                config.minSurvivability = population[0].min_survivability;
+                config.neurons = population[0].neurons;
+            }
+        }
+        this.setConfig(config);
+        this.initGame();
+        if (population.length) {
+            this.importAgents(population[0].agents)
+        }
+        this.hideLoader();
+    }
+
+    initGame() {
         this.controlsView = document.querySelector("controls-view");
         this.statsView = document.querySelector('stats-view');
         this.agentDetailsView = document.querySelector('agent-details-view');
@@ -145,6 +175,7 @@ class Page {
     }
 
     createHandler(){
+        this.showLoader();
         this.createMap();
         this.status = STATUS_INITIALIZED;
         this.updateWorker = new Worker(
@@ -200,6 +231,7 @@ class Page {
                 console.log('Agents set on map');
             })
         }
+        this.hideLoader();
     }
 
     agentClickHandler({ agent }){
@@ -465,35 +497,9 @@ class Page {
     }
 }
 
-class BoardController extends Base {
-    _page;
-
-    async init() {
-        const training = window.history.state?.training;
-        let population;
-
-        if (training) {
-            const service = await this._serviceContainer.get('population')
-            population = await service.getAll(1, {
-                filters: {training: training.id},
-                perPage: 1
-            });
-            config.actions = population[0].actions;
-            config.level = population[0].level;
-            config.minSurvivability = population[0].min_survivability;
-            config.neurons = population[0].neurons;
-        }
-        this._page = new Page(config);
-        if (population) {
-            this._page.importAgents(population[0].agents)
-        }
-        this.hideLoader();
-    }
-}
-
-BoardController.layout = 'main';
-BoardController.partial = 'board';
+Page.layout = 'main';
+Page.partial = 'board';
 
 export {
-    BoardController as Board
+    Page as Board
 }

@@ -1,11 +1,4 @@
-class Loader extends HTMLElement {
-
-    _template;
-
-    constructor() {
-        super();
-        this._template = document.createElement('template');
-        this._template.innerHTML = `
+const tpl = `
             <style>
             :host{
                 width: 100%;
@@ -29,7 +22,16 @@ class Loader extends HTMLElement {
             }
             </style>
             <div></div>
-        `
+        `;
+
+class Loader extends HTMLElement {
+
+    _template;
+
+    constructor() {
+        super();
+        this._template = document.createElement('template');
+        this._template.innerHTML = tpl;
     }
 
     connectedCallback(){

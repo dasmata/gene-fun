@@ -23,6 +23,23 @@ class Training {
         }
     }
 
+    async create(name) {
+        try {
+            return await this._storageService.save('training', {
+                name
+            })
+        } catch (e) {
+            return Promise.reject();
+        }
+    }
+
+    async remove(trainingId){
+        try {
+            return await this._storageService.remove('training', trainingId)
+        } catch (e) {
+            return Promise.reject();
+        }
+    }
 }
 
 Training.perPage = 20;

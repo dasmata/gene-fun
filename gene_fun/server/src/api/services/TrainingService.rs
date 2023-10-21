@@ -2,6 +2,7 @@ use bson::{Bson, to_document, doc};
 use chrono::{Utc};
 use futures_util::{TryStreamExt};
 use mongodb::{Collection, options::FindOptions};
+use mongodb::results::DeleteResult;
 use uuid::Uuid;
 use models::{Training::Training};
 use serde::{Deserialize, Serialize};
@@ -29,7 +30,7 @@ impl TrainingService {
         let options = FindOptions::builder()
             .limit(filters.limit.unwrap_or(20))
             .skip(filters.offset.unwrap_or(0))
-            .sort(doc! {"date": -1})
+            .sort(doc! {"start_date": -1})
             .build();
 
         let mut filter_doc = doc! {};
@@ -89,5 +90,13 @@ impl TrainingService {
             Err(_) => panic!("Could not insert training")
         }
         Some(training)
+    }
+
+    pub async fn delete_training(&self, id: &str) -> bool {
+        let query_result = self.collection.delete_one(bson::doc! {"id": id.to_owned()}, None).await;
+        match query_result {
+            Ok(_) => true,
+            Err(_) => false
+        }
     }
 }
