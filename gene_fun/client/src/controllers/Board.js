@@ -70,6 +70,7 @@ class Page extends Base {
     status = STATUS_INITIALIZED;
     armageddonStats = {};
     rpcCallbacks = new Map();
+    training;
 
     bestPopulation = [];
 
@@ -84,13 +85,13 @@ class Page extends Base {
     }
 
     async init() {
-        const training = window.history.state?.training;
+        this.training = window.history.state?.training;
         let population;
 
-        if (training) {
+        if (this.training) {
             const service = await this._serviceContainer.get('population')
             population = await service.getAll(1, {
-                filters: {training: training.id},
+                filters: {training: this.training.id},
                 perPage: 1
             });
             if (population.length) {
@@ -137,9 +138,9 @@ class Page extends Base {
 
     setConfig(config){
         this.config = config;
-        this.actions = config.actions;
-        this.level = config.level;
-        this.survivabilityThreshold = config.minSurvivability;
+        this.actions = config.actions || this.actions;
+        this.level = config.level || this.level;
+        this.survivabilityThreshold = config.minSurvivability || this.survivabilityThreshold;
     }
 
     createMap() {
@@ -221,6 +222,7 @@ class Page extends Base {
 
         this.map.placeAgentsOnMap();
         if (this.status === STATUS_RUNNING) {
+            this._savePopulation()
             this.playHandler();
             this.renderAgentDetails();
             return;
@@ -232,6 +234,25 @@ class Page extends Base {
             })
         }
         this.hideLoader();
+    }
+
+    _savePopulation() {
+        if (!this.population.length) {
+           return;
+        }
+        this._serviceContainer.get('population').then(serv => serv.save({
+            training: this.training.id,
+            agents: this.population,
+            level: parseInt(this.level),
+            actions: parseInt(this.actions),
+            min_survivability: parseInt(this.survivabilityThreshold),
+            gene_number: parseInt(this.geneNumber),
+            neurons: Object.values(this.neuronTypes).reduce((levels, neuron, idx) => {
+                levels[neuron.level] = levels[neuron.level] || [];
+                levels[neuron.level].push(neuron.id);
+                return levels;
+            }, [])
+        })).catch(e => console.log(e));
     }
 
     agentClickHandler({ agent }){
@@ -363,9 +384,7 @@ class Page extends Base {
 
     startRendering = () => {
         this.boardView.board = this.map;
-        // this.mapRenderer = this.mapRenderer || new MapRenderer(this.map);
         this.updateStats();
-        // this.mapRenderer.render();
         this.renderAgentDetails();
     }
 

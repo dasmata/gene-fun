@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Genes {
     fingerprint: String,
-    data: Vec<[i32; 5]>
+    data: Vec<[f64; 5]>
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Agent {
     pub genes: Genes,
     pub id: String,
-    pub reward: i32
+    pub reward: Option<i32>
 }
 
 // the output to our `create_user` handler
@@ -23,7 +23,8 @@ pub struct CreatePopulationParams {
     pub actions: u64,
     pub level: u16,
     pub gene_number: u32,
-    pub min_survivability: u8
+    pub min_survivability: u8,
+    pub generations: Option<u32>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -36,5 +37,6 @@ pub struct Population {
     pub level: u16,
     pub gene_number: u32,
     pub min_survivability: u8,
-    pub date: i64
+    pub date: i64,
+    pub generations: Option<u32>
 }
