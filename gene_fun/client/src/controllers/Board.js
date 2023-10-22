@@ -99,6 +99,7 @@ class Page extends Base {
                 config.level = population[0].level;
                 config.minSurvivability = population[0].min_survivability;
                 config.neurons = population[0].neurons;
+                this.generationNr = population[0].generations;
             }
         }
         this.setConfig(config);
@@ -251,7 +252,8 @@ class Page extends Base {
                 levels[neuron.level] = levels[neuron.level] || [];
                 levels[neuron.level].push(neuron.id);
                 return levels;
-            }, [])
+            }, []),
+            generations: this.generationNr
         })).catch(e => console.log(e));
     }
 

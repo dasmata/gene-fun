@@ -16,7 +16,6 @@ class Board extends Observable{
     spawnAreas = [];
     walls = [];
     locationIdx;
-    winners = {};
 
     constructor(size, levels, level = 0) {
         super();
@@ -252,7 +251,7 @@ class Board extends Observable{
     }
 }
 
-Board.getAgentCoords = (bounds, vectorBase, validationFunction) => {
+Board.getAgentCoords = (bounds, vectorBase) => {
     const x = Math.ceil(
         Math.round(Math.random() * bounds.hSize) + bounds.hStart
     );
@@ -267,11 +266,6 @@ Board.getAgentCoords = (bounds, vectorBase, validationFunction) => {
         ],
         vectorBase
     );
-
-    // if(!validationFunction(coords)){
-    //     return Population.getAgentCoords(bounds, vectorBase, validationFunction);
-    // }
-
     return coords;
 }
 

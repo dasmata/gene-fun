@@ -1,4 +1,5 @@
 import '../confirm/Confirm.js';
+import './TrainingStats.js';
 
 class Training extends HTMLElement {
     _shadowRoot;
@@ -31,7 +32,7 @@ class Training extends HTMLElement {
             confirm.removeEventListener('userConfirmation', clbk);
             if( e.detail ){
                 const evt = new CustomEvent('delete', {
-                    detail: this._training.id,
+                    detail: this._training.training.id,
                     bubbles: true,
                     composed: true
                 });
@@ -48,9 +49,18 @@ class Training extends HTMLElement {
         if (!this._shadowRoot) {
             return;
         }
-        this._shadowRoot.querySelector('.name').innerText = this._training.name;
+        const { training, ...meta } = this._training;
+        this._shadowRoot.querySelector('.name').innerText = training.name;
         this._shadowRoot.querySelector('.author').innerText = 'Unknown author';
-        this._shadowRoot.querySelector('.date').innerText = new Intl.DateTimeFormat(navigator.language).format(new Date(this._training.start_date * 1000));
+        this._shadowRoot.querySelector('.date').innerText = new Intl.DateTimeFormat(navigator.language)
+            .format(new Date(training.start_date * 1000));
+        const statsContainer = this._shadowRoot.querySelector('.stats');
+        Object.entries(meta).forEach(entry => {
+            const el = document.createElement('training-stats-view');
+            el.setAttribute('label', entry[0]);
+            el.setAttribute('value', entry[1]);
+            statsContainer.appendChild(el);
+        });
     }
 
     set training(data){

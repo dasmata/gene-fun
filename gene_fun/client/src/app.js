@@ -48,7 +48,7 @@ class App {
             if (module[name]) {
                 return module[name];
             }
-        } catch (e) { }
+        } catch (e) { console.log(e) }
         throw new Error(`Could not load controller ${name}`)
     }
 

@@ -12,7 +12,7 @@ class TrainingsList extends HTMLElement {
     constructor() {
         super();
         this._trainings = [];
-        this.handTrainingClick = this.handTrainingClick.bind(this);
+        this.handleTrainingClick = this.handleTrainingClick.bind(this);
         this.handleNewTrainingClick = this.handleNewTrainingClick.bind(this)
     }
 
@@ -28,7 +28,7 @@ class TrainingsList extends HTMLElement {
 
     disconnectedCallback(){
         this._shadowRoot.querySelectorAll('training-view').forEach(el => {
-            el.removeEventListener('click', this.handTrainingClick);
+            el.removeEventListener('click', this.handleTrainingClick);
         });
         this._newTrainingBtn.removeEventListener('click', this.handleNewTrainingClick);
     }
@@ -38,8 +38,8 @@ class TrainingsList extends HTMLElement {
         this.dispatchEvent(evt);
     }
 
-    handTrainingClick(e) {
-        const evt = new CustomEvent('select', {detail: e.target.training});
+    handleTrainingClick(e) {
+        const evt = new CustomEvent('select', {detail: e.target.training.training});
         this.dispatchEvent(evt);
     }
 
@@ -52,7 +52,7 @@ class TrainingsList extends HTMLElement {
         this._trainings.forEach(training => {
             const el = document.createElement('training-view');
             el.training = training;
-            el.addEventListener('click', this.handTrainingClick)
+            el.addEventListener('click', this.handleTrainingClick)
             tmpFragment.appendChild(el);
         });
         this._container.appendChild(tmpFragment);

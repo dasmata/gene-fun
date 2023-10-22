@@ -5,9 +5,21 @@ use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::routing::{get, post, delete};
 use axum::response::IntoResponse;
+use serde::{Deserialize, Serialize};
 use crate::api::AppState;
-use crate::api::models::Training::{CreateTrainingParams};
+use crate::api::models::Training::{CreateTrainingParams, Training};
 use crate::api::services::TrainingService::Filters;
+use crate::api::services::PopulationService;
+
+#[derive(Serialize, Deserialize)]
+struct TrainingData {
+    training: Training,
+    generations: Option<u32>,
+    level: u16,
+    actions: u64,
+    gene_number: u32,
+    populations_size: usize
+}
 
 pub fn get_router(Extension(state): Extension<Arc<AppState>>) -> Router {
     Router::new()
@@ -29,7 +41,30 @@ async fn list_trainings(
         .get_all_trainings(filters)
         .await;
 
-    Json(trainings).into_response()
+    let mut trainings_data: Vec<TrainingData> = vec! [];
+
+    for training in trainings {
+        let training_id = &training.id;
+        let populations = state
+            .service_container
+            .population
+            .get_all_populations(PopulationService::Filters {
+                offset: Some(0),
+                limit: Some(1),
+                training: Some(training_id.to_owned()),
+            })
+            .await;
+        trainings_data.push(TrainingData {
+            training,
+            generations: populations[0].generations,
+            level: populations[0].level,
+            actions: populations[0].actions,
+            gene_number: populations[0].gene_number,
+            populations_size: populations[0].agents.len(),
+        })
+    }
+
+    Json(trainings_data).into_response()
 }
 
 async fn get_training(
