@@ -34,8 +34,14 @@ class Board extends HTMLElement {
     }
 
     handleClick = (e) => {
+        const { width: actualWidth, height: actualHeight } = this._boardEl.getBoundingClientRect();
+        const widthRation =  this._board.size.width / actualWidth;
+        const heightRation = this._board.size.height / actualHeight;
         const clickVector = new Vector(
-            [~~(e.offsetX / (BoardModel.agentSize * 2)), ~~(e.offsetY / (BoardModel.agentSize * 2))],
+            [
+                ~~(e.offsetX * widthRation),
+                ~~(e.offsetY * heightRation)
+            ],
             [this._board.size.width, this._board.size.height]
         )
         const agent = this._board.findAgent(clickVector);

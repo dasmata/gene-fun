@@ -1,5 +1,3 @@
-import { EventBus } from "../../EventBus.js";
-
 class Import extends HTMLElement {
     saveCurrentBtn;
     saveBestBtn;
@@ -32,18 +30,21 @@ class Import extends HTMLElement {
         reader.addEventListener('load', evt => {
             const agents = JSON.parse(evt.target.result);
             if(agents?.length > 0){
-                EventBus.publish('importAgents', agents);
+                const event = new CustomEvent('importAgents', { detail: agents })
+                this.dispatchEvent(event);
             }
         });
         reader.readAsText(e.target.files[0])
     }
 
     saveBestClickHandler(){
-        EventBus.publish('save', 'best');
+        const event = new CustomEvent('saveBest')
+        this.dispatchEvent(event);
     }
 
     saveCurrentClickHandler(){
-        EventBus.publish('save', 'current');
+        const event = new CustomEvent('saveCurrent')
+        this.dispatchEvent(event);
     }
 }
 
