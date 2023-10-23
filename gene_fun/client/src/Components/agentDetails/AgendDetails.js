@@ -1,6 +1,5 @@
 import "./AgentNeuronLevel.js"
 import "./AgentResults.js"
-import { EventBus } from "../../EventBus.js";
 
 class AgentDetails extends HTMLElement {
 
@@ -33,12 +32,13 @@ class AgentDetails extends HTMLElement {
     }
 
     clearHandler() {
-        this._shadowRoot.innerHTML = '';
         this.disconnectedCallback();
+        this._shadowRoot.innerHTML = '';
     }
 
     computeHandler() {
-        EventBus.publish('computeRequest', this._agent);
+        const evt = new CustomEvent('computeRequest', {detail: this._agent});
+        this.dispatchEvent(evt);
     }
 
     renderNeurons(){
@@ -93,6 +93,10 @@ class AgentDetails extends HTMLElement {
     }
 
     set agent(agent) {
+        if (agent === null) {
+            this._shadowRoot.innerHTML = '';
+            return;
+        }
         this.appendTemplate();
         agent.genes.data.reduce((acc, gene) => {
             acc[gene[2]] = acc[gene[2]] || [];

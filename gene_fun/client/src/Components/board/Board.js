@@ -2,7 +2,6 @@ import { WallRenderer } from "./renderers/WallRenderer.js";
 import { AreaRenderer } from "./renderers/AreaRenderer.js";
 import { AgentRenderer } from "./renderers/AgentRenderer.js";
 import { Vector } from "../../scope/Vector.js";
-import { EventBus } from "../../EventBus.js";
 import { Board as BoardModel } from "../../scope/Board.js"
 
 class Board extends HTMLElement {
@@ -41,12 +40,20 @@ class Board extends HTMLElement {
         )
         const agent = this._board.findAgent(clickVector);
         if (agent) {
-            EventBus.publish('agentClick', { agent, map: this.map })
+            const evt = new CustomEvent('agentSelect', {detail: { agent }})
+            this.dispatchEvent(evt);
+            this._agentRenderer.activeAgent = agent;
         }
     }
 
     clearBoard(ctx) {
-        ctx.clearRect(0, 0, this._board.size.width, this._board.size.height);
+        const context = ctx || this._boardEl.getContext('2d');
+        context.clearRect(0, 0, this._board.size.width, this._board.size.height);
+    }
+
+    clearAreas(ctx) {
+        const context = ctx || this._areasEl.getContext('2d');
+        context.clearRect(0, 0, this._board.size.width, this._board.size.height);
     }
 
     renderWalls(ctx) {
@@ -64,6 +71,9 @@ class Board extends HTMLElement {
     }
 
     renderBoard(){
+        if (!this._board) {
+            return;
+        }
         const ctx = this._boardEl.getContext('2d');
         this.clearBoard(ctx);
         this.renderWalls(ctx);
@@ -83,6 +93,18 @@ class Board extends HTMLElement {
     }
 
     set board(board) {
+        if (board === null) {
+            if (this._board) {
+                this.clearBoard();
+                this.clearAreas();
+            }
+            this._board = null;
+            this._boardEl.removeAttribute('width');
+            this._boardEl.removeAttribute('height');
+            this._areasEl.removeAttribute('width');
+            this._areasEl.removeAttribute('height');
+            return;
+        }
         this._board = board;
         this._boardEl.setAttribute('width', this._board.size.width);
         this._boardEl.setAttribute('height', this._board.size.height);
@@ -92,6 +114,9 @@ class Board extends HTMLElement {
         this.renderBoard();
     }
 
+    set activeAgent(agent) {
+        this._agentRenderer.activeAgent = agent;
+    }
 }
 
 customElements.define('board-view', Board);

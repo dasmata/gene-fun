@@ -5,9 +5,21 @@ use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::routing::{get, post, delete};
 use axum::response::IntoResponse;
+use serde::{Deserialize, Serialize};
 use crate::api::AppState;
-use crate::api::models::Training::{CreateTrainingParams};
+use crate::api::models::Training::{CreateTrainingParams, Training};
 use crate::api::services::TrainingService::Filters;
+use crate::api::services::PopulationService;
+
+#[derive(Serialize, Deserialize)]
+struct TrainingData {
+    training: Training,
+    generations: Option<u32>,
+    level: Option<u16>,
+    actions: Option<u64>,
+    gene_number: Option<u32>,
+    populations_size: Option<usize>
+}
 
 pub fn get_router(Extension(state): Extension<Arc<AppState>>) -> Router {
     Router::new()
@@ -29,7 +41,44 @@ async fn list_trainings(
         .get_all_trainings(filters)
         .await;
 
-    Json(trainings).into_response()
+    let mut trainings_data: Vec<TrainingData> = vec! [];
+
+    for training in trainings {
+        let training_id = &training.id;
+        let populations = state
+            .service_container
+            .population
+            .get_all_populations(PopulationService::Filters {
+                offset: Some(0),
+                limit: Some(1),
+                training: Some(training_id.to_owned()),
+            })
+            .await;
+        trainings_data.push(match populations.len() {
+            0 => {
+                TrainingData {
+                    training,
+                    generations: None,
+                    level: None,
+                    actions: None,
+                    gene_number: None,
+                    populations_size: None
+                }
+            },
+            _ => {
+                TrainingData {
+                    training,
+                    generations: populations[0].generations,
+                    level: Some(populations[0].level),
+                    actions: Some(populations[0].actions),
+                    gene_number: Some(populations[0].gene_number),
+                    populations_size: Some(populations[0].agents.len())
+                }
+            }
+        });
+    }
+
+    Json(trainings_data).into_response()
 }
 
 async fn get_training(
@@ -62,8 +111,9 @@ async fn delete_training(
             StatusCode::NOT_FOUND.into_response()
         }
         Some(training) => {
-            let result = state.service_container.training.delete_training(&training_id).await;
-            if result {
+            let training_result = state.service_container.training.delete_training(&training_id).await;
+            if training_result {
+                state.service_container.population.delete_populations(&training_id).await;
                 StatusCode::ACCEPTED.into_response()
             } else {
                 StatusCode::INTERNAL_SERVER_ERROR.into_response()

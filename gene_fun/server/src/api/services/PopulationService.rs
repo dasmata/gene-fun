@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
 pub struct Filters {
-    offset: Option<u64>,
-    limit: Option<i64>,
-    training: Option<String>
+    pub(crate) offset: Option<u64>,
+    pub(crate) limit: Option<i64>,
+    pub(crate) training: Option<String>
 }
 
 
@@ -76,7 +76,8 @@ impl PopulationService {
             level: population_data.level,
             gene_number: population_data.gene_number,
             min_survivability: population_data.min_survivability,
-            date: Utc::now().timestamp()
+            date: Utc::now().timestamp(),
+            generations: population_data.generations
         };
         let pop_result = to_document(&pop);
         let document = match pop_result {
@@ -90,5 +91,13 @@ impl PopulationService {
             Err(_) => panic!("Could not insert population")
         }
         Some(pop)
+    }
+
+    pub async fn delete_populations(&self, training: &str) -> bool {
+        let query_result = self.collection.delete_many(bson::doc! {"training": training.to_owned()}, None).await;
+        match query_result {
+            Ok(_) => true,
+            Err(_) => false
+        }
     }
 }

@@ -2,13 +2,10 @@ use bson::{Bson, to_document, doc};
 use chrono::{Utc};
 use futures_util::{TryStreamExt};
 use mongodb::{Collection, options::FindOptions};
-use mongodb::results::DeleteResult;
 use uuid::Uuid;
-use models::{Training::Training};
 use serde::{Deserialize, Serialize};
+use crate::api::models::Training::Training;
 
-#[path = "../models/mod.rs"]
-mod models;
 
 #[derive(Deserialize, Serialize)]
 pub struct Filters {

@@ -23,6 +23,14 @@ class Training {
         }
     }
 
+    async getTraining(id, options){
+        try {
+            return await this._storageService.get('training', id, options);
+        } catch (e) {
+            return Promise.reject();
+        }
+    }
+
     async create(name) {
         try {
             return await this._storageService.save('training', {

@@ -1,10 +1,9 @@
-import { EventBus } from "../../EventBus.js";
-
 class Controls extends HTMLElement {
     killBtn;
     createBtn;
     pauseBtn;
     playBtn;
+
     levelIndicator;
     actionsSlider;
     genesSlider;
@@ -70,13 +69,13 @@ class Controls extends HTMLElement {
         this.actionsSlider.addEventListener('change', this.handleParamsChange);
         this.genesSlider.addEventListener('change', this.handleParamsChange);
         this.survivabilitySlider.addEventListener('change', this.handleParamsChange);
-        EventBus.subscribe('paramChange', e => {
-            switch(e.name){
-                case 'level':
-                    this.levelIndicator.value = parseInt(e.value);
-                    break;
-            }
-        });
+        // EventBus.subscribe('paramChange', e => {
+        //     switch(e.name){
+        //         case 'level':
+        //             this.levelIndicator.value = parseInt(e.value);
+        //             break;
+        //     }
+        // });
     }
 
     setInitialParams(){
@@ -90,33 +89,38 @@ class Controls extends HTMLElement {
     }
 
     handleParamsChange(e) {
-        EventBus.publish('paramChange', {
+        const evt = new CustomEvent('paramChange', { detail: {
             name: e.target.name,
             value: e.target.value
-        })
+        }});
+        this.dispatchEvent(evt);
     }
 
     killClickHandler(e){
         this.playBtn.removeEventListener('click', this.playClickHandler);
         this.pauseBtn.removeEventListener('click', this.pauseClickHandler);
         this.createBtn.addEventListener('click', this.createClickHandler);
-        EventBus.publish('kill', e);
+        const evt = new CustomEvent('kill');
+        this.dispatchEvent(evt);
     }
 
     playClickHandler(e){
         this.playBtn.removeEventListener('click', this.playClickHandler);
-        EventBus.publish('play', e);
+        const evt = new CustomEvent('play');
+        this.dispatchEvent(evt);
     }
 
     pauseClickHandler(e){
         this.playBtn.removeEventListener('click', this.playClickHandler);
         this.playBtn.addEventListener('click', this.playClickHandler);
-        EventBus.publish('pause', e);
+        const evt = new CustomEvent('pause');
+        this.dispatchEvent(evt);
     }
 
     createClickHandler(e) {
         this.setReadyState()
-        EventBus.publish('create', e);
+        const evt = new CustomEvent('create');
+        this.dispatchEvent(evt);
     }
 
 
