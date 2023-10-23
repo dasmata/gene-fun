@@ -37,8 +37,15 @@ class Rest {
         return await response.json();
     }
 
-    async get(entity, id) {
-
+    async get(entity, id, options) {
+        const response = await this._transport(this._getURL(entity, id), {
+            method: 'GET',
+            ...this._getOptions(options)
+        });
+        if(response.status !== 200){
+            throw new Rest.Error(response.status)
+        }
+        return await response.json();
     }
 
     async save(entity, data, options) {

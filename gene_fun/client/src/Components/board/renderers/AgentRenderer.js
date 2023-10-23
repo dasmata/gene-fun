@@ -1,13 +1,9 @@
-import { EventBus } from "../../../EventBus.js";
 import { Board } from "../../../scope/Board.js";
 
 class AgentRenderer {
     activeAgent;
     constructor(ctx) {
         this.ctx = ctx
-        EventBus.subscribe('selectedAgent', (data) => {
-            this.activeAgent = data;
-        });
     }
 
     render(agent) {

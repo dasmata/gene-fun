@@ -31,7 +31,7 @@ main {
 }
 
 #canvas-wrapper {
-    width: calc(256px * (2 + 2));
+    width: 45%;
     position: relative;
 }
 

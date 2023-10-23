@@ -1,8 +1,3 @@
-import { Vector } from "../scope/Vector.js";
-import { Board } from "../scope/Board.js";
-import { neuronPool } from "../scope/neurons/neuronPool.js";
-import { EventBus } from "../EventBus.js";
-import { FileWriter } from "../FileWriter.js";
 import { config } from "../scope/config.js";
 import { Base } from "./Base.js";
 
@@ -12,86 +7,44 @@ import "../Components/stats/Stats.js";
 import "../Components/agentDetails/AgendDetails.js";
 import "../Components/board/Board.js";
 
-
-let startMark = null
-let endMark = null;
-const lastLevelNeurons = {
-    mr : () => [Board.agentSize, 0],
-    ml: () => [-1 * Board.agentSize, 0],
-    mu: () => [0, -1 * Board.agentSize],
-    md: () => [0, Board.agentSize],
-    mrand: () => [
-        Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1),
-        Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1)
-    ]
-};
-const STATUS_PAUSED = 0;
-const STATUS_RUNNING = 1;
-const STATUS_INITIALIZED = 2;
-
-const methodEventsMap = {
-    neuronCreated: 'handleNeuronCreated',
-    agentCreated: 'agentCreated',
-    ready: 'handleWorkerReady',
-    computed: 'handleComputed',
-    armageddon: 'handleArmageddon',
-    agentClick: 'agentClickHandler',
-    computeRequest: 'computeRequest',
-    rpcResponse: 'rpcResponse',
-    create: 'createHandler',
-    play: 'playHandler',
-    kill: 'killHandler',
-    pause: 'pauseHandler',
-    save: 'saveHandler',
-    importAgents: 'importAgents'
-}
-
-/**
- * This is an ABOMINATION. It should be shot like a horse with a broken leg
- */
-
 class Page extends Base {
-    actions = 2000;
-    populationSize = 1000;
-    geneNumber = 30;
-    survivabilityThreshold = 60;
-    level = 0;
-    generationNr = 0;
+    _controlsView;
+    _statsView;
+    _boardView;
+    _agentDetailsView;
 
-    map;
+    _training;
+    _boardService;
+    _eventBusService;
 
-    controlsView;
-    statsView;
-    boardView;
-
-    neuronTypes;
-    population;
-    initialMapData;
-    status = STATUS_INITIALIZED;
-    armageddonStats = {};
-    rpcCallbacks = new Map();
-    training;
-
-    bestPopulation = [];
+    _events = [
+        { target: '_controlsView', name: 'create', handler: 'createHandler' },
+        { target: '_controlsView', name: 'play', handler: 'playHandler' },
+        { target: '_controlsView', name: 'pause', handler: 'pauseHandler' },
+        { target: '_controlsView', name: 'kill', handler: 'killHandler' },
+        { target: '_controlsView', name: 'paramChange', handler: 'paramsChangeHandler' },
+        { target: '_agentDetailsView', name: 'computeRequest', handler: 'computeRequestHandler' },
+        { target: '_boardView', name: 'agentSelect', handler: 'agentSelectHandler' },
+        { target: 'eventBus', name: 'selectedAgent', handler: 'autoAgentSelectHandler' },
+        { target: 'eventBus', name: 'updateSelectedAgent', handler: 'autoAgentSelectHandler' }
+    ]
 
     constructor(serviceContainer){
         super(serviceContainer);
-        Object.keys(methodEventsMap).forEach(messageType => {
-            EventBus.subscribe(messageType, this[methodEventsMap[messageType]].bind(this));
-        });
-        this.update = this.update.bind(this);
-        this.neuronTypes = {};
-        this.population = [];
+        this._eventBusService = this._serviceContainer.get('eventBus')
+            .then(srv => this._eventBusService = srv);
+
     }
 
     async init() {
-        this.training = window.history.state?.training;
+        this._training = window.history.state?.training;
+        this._boardService = await this._serviceContainer.get('board');
         let population;
 
-        if (this.training) {
+        if (this._training) {
             const service = await this._serviceContainer.get('population')
             population = await service.getAll(1, {
-                filters: {training: this.training.id},
+                filters: {training: this._training.id},
                 perPage: 1
             });
             if (population.length) {
@@ -99,422 +52,175 @@ class Page extends Base {
                 config.level = population[0].level;
                 config.minSurvivability = population[0].min_survivability;
                 config.neurons = population[0].neurons;
-                this.generationNr = population[0].generations;
+                config.generationNr = population[0].generations;
+                config.geneNumber = population[0].gene_number;
             }
         }
-        this.setConfig(config);
-        this.initGame();
+        this.initBoard(config)
         if (population.length) {
-            this.importAgents(population[0].agents)
+            this._controlsView.setAttribute('actions', config.actions);
+            this._controlsView.setAttribute('level', config.level);
+            this._controlsView.setAttribute('gene-number', config.geneNumber);
+            this._controlsView.setAttribute('survivability-threshold', config.minSurvivability);
+            this._controlsView.setReadyState();
+
+            await this.importAgents(population[0].agents)
         }
+    }
+
+    initBoard(config) {
+        this._controlsView = document.querySelector("controls-view");
+        this._statsView = document.querySelector('stats-view');
+        this._agentDetailsView = document.querySelector('agent-details-view');
+        this._boardView = document.querySelector('board-view');
+
+        this._controlsView.setAttribute('actions', `${this._boardService.actions}`);
+        this._controlsView.setAttribute('gene-number', `${this._boardService.geneNumber}`);
+        this._controlsView.setAttribute('survivability-threshold', `${this._boardService.survivabilityThreshold}`);
+
+        this._boardService.setConfig(config);
+
+        this._events.forEach((event, idx) => {
+            this[event.handler] = this[event.handler].bind(this);
+            if (event.target === 'eventBus'){
+                this._events[idx] = this._eventBusService.subscribe(event.name, this[event.handler]);
+            } else {
+                this[event.target].addEventListener(event.name, this[event.handler]);
+            }
+        });
+        this._events.push(this._eventBusService.subscribe('savePopulation', this._savePopulationHandler.bind(this)));
+        this._events.push(this._eventBusService.subscribe('armageddonStats', this._armageddonStatsHandler.bind(this)));
+
         this.hideLoader();
     }
 
-    initGame() {
-        this.controlsView = document.querySelector("controls-view");
-        this.statsView = document.querySelector('stats-view');
-        this.agentDetailsView = document.querySelector('agent-details-view');
-        this.boardView = document.querySelector('board-view');
-
-
-        this.controlsView.setAttribute('actions', `${this.actions}`);
-        this.controlsView.setAttribute('gene-number', `${this.geneNumber}`);
-        this.controlsView.setAttribute('survivability-threshold', `${this.survivabilityThreshold}`);
-
-
-
-        EventBus.subscribe('paramChange', e => {
-            if(typeof this[e.name] !== 'undefined'){
-                this[e.name] = e.value;
-            }
-            if(e.name === 'geneNumber' || e.name === 'actions'){
-                this.sendRpc(
-                    [],
-                    `set${e.name.slice(0,1).toUpperCase()}${e.name.slice(1)}`,
-                    [e.value]
-                )
-            }
-        });
-    }
-
-    setConfig(config){
-        this.config = config;
-        this.actions = config.actions || this.actions;
-        this.level = config.level || this.level;
-        this.survivabilityThreshold = config.minSurvivability || this.survivabilityThreshold;
-    }
-
-    createMap() {
-        this.map = new Board(
-            this.config.size,
-            this.config.levels,
-            this.level
-        )
-        this.map.population = [];
-        this.population = [];
-        this.initialMapData = this.map.toJSON();
-    }
-
-    killHandler(){
-        this.status = STATUS_PAUSED;
-        this.stopRendering();
-        this.neuronTypes = {};
-        this.population = [];
-        this.map = null;
-    }
-
-    playHandler(){
-        startMark = performance.mark('aaa');
-        this.status = STATUS_RUNNING;
-        this.updateWorker.postMessage({
-            type: 'setAggregatedValues',
-            payload: this.map.toJSON()
-        });
-    }
-
-    pauseHandler(){
-        this.status = STATUS_PAUSED;
-    }
-
-    createHandler(){
-        this.showLoader();
-        this.createMap();
-        this.status = STATUS_INITIALIZED;
-        this.updateWorker = new Worker(
-            'src/engine/WorkerMaster.js',
-            {
-                name: 'MasterWorker',
-                type: 'module'
-            }
-        );
-        this.updateWorker.addEventListener('message', this.update);
-        this.updateWorker.postMessage({
-            type: 'init',
-            payload: {
-                dependencies: [
-                    '../scope/neurons/ScopeNeuron.js',
-                    '../scope/neurons/VisionNeuron.js',
-                ],
-                neurons: neuronPool(this.map),
-                populationSize: this.populationSize,
-                geneNumber: this.geneNumber,
-                minActions: this.actions,
-                config: this.config.engineConfig
-            }
-        });
-    }
-
-    saveHandler(type){
-        const population = type === 'best' ?  this.bestPopulation : this.map?.population;
-        const filename = type === 'best' ?  'bestPopulation' : 'currentPopulation';
-        if(!population?.length){
-            console.error('Not enough data');
-            return;
-        }
-        const writer = new FileWriter()
-        writer.download(JSON.stringify(population), `${filename}.json`);
-    }
-
-    handleWorkerReady(){
-        this.map.setPopulation(this.population);
-
-        this.updateStats();
-        this.agentDetailsView.neurons = this.neuronTypes;
-
-        this.map.placeAgentsOnMap();
-        if (this.status === STATUS_RUNNING) {
-            this._savePopulation()
-            this.playHandler();
-            this.renderAgentDetails();
-            return;
-        }
-        if(this.status === STATUS_INITIALIZED){
-            this.startRendering();
-            this.sendRpc([], 'setAgentsActionValues', [this.map.toJSON().agents], () => {
-                console.log('Agents set on map');
-            })
-        }
-        this.hideLoader();
-    }
-
-    _savePopulation() {
-        if (!this.population.length) {
-           return;
-        }
-        this._serviceContainer.get('population').then(serv => serv.save({
-            training: this.training.id,
-            agents: this.population,
-            level: parseInt(this.level),
-            actions: parseInt(this.actions),
-            min_survivability: parseInt(this.survivabilityThreshold),
-            gene_number: parseInt(this.geneNumber),
-            neurons: Object.values(this.neuronTypes).reduce((levels, neuron, idx) => {
-                levels[neuron.level] = levels[neuron.level] || [];
-                levels[neuron.level].push(neuron.id);
-                return levels;
-            }, []),
-            generations: this.generationNr
-        })).catch(e => console.log(e));
-    }
-
-    agentClickHandler({ agent }){
-        this.renderAgentDetails(agent);
-    }
-
-    sendNeuronContext(type, msgId){
-        this.sendRpc(['neuronPool', type], 'setContext', [this.initialMapData], null, msgId);
-    }
-
-    sendRpc(path, method, params, callback, threadIdentifier) {
-        const id = `${Math.random().toString(36).substring(2,7)}-${Math.random().toString(36).substring(2,7)}-${Math.random().toString(36).substring(2,7)}`;
-        try {
-            this.updateWorker?.postMessage({
-                type: 'rpc',
-                payload: {
-                    ctxPath: path,
-                    method: method,
-                    params: params,
-                    rpcId: id
-                },
-                reqId: threadIdentifier
-            })
-            this.rpcCallbacks.set(id, callback || (() => {}));
-        } catch (e) {
-            console.error(e);
-        }
-        return id;
-    }
-
-    handleNeuronCreated(e) {
-        const neuron = e.data.payload;
-        this.neuronTypes[neuron.id] = {...neuron};
-        this.sendNeuronContext(neuron.type, e.data.msgId);
-    }
-
-    handleComputed(e){
-        const computeResults = e.data.payload;
-        if(this.selectedAgent.id){
-            setTimeout(() => {
-                this.agentDetailsView.agent = computeResults[this.selectedAgent.id].agent;
-                this.agentDetailsView.results = computeResults[this.selectedAgent.id].results;
-            });
-        }
-        const results = Object.values(computeResults).map(entry => {
-            const actionResult = this.actionAggregator(entry.results, entry.agent, this.neuronTypes);
-            actionResult.reward = this.getActionReward(actionResult);
-            return actionResult;
-        });
-        this.map.setPopulation(results);
-        if(this.status === STATUS_RUNNING){
-            this.updateWorker.postMessage({
-                type: 'setAggregatedValues',
-                payload: this.map.toJSON()
-            })
-        }
-    }
-
-    handleArmageddon(){
-        this.population = [];
-        const [replicators, agentsPerArea] = this.map.findAllAgents();
-        const survivability = Math.round((replicators.length / this.map.population.length) * 10000) / 100;
-        if(survivability > this.armageddonStats.survivability){
-            this.bestPopulation = this.map.population;
-        }
-        this.armageddonStats = {
-            agentsPerArea,
-            replicatorsNr: replicators.length,
-            populationSize: this.map.population.length,
-            survivability,
-            maxSurvivability: Math.max(this.armageddonStats?.maxSurvivability || 0, survivability)
-        };
-        this.generationNr++;
-        if (survivability > this.survivabilityThreshold){
-            try {
-                this.levelUp();
-            } catch (e) {
-                alert('Great success!!');
+    destroy() {
+        this._events.forEach(event => {
+            if (typeof event === 'function') {
+                event();
                 return;
             }
-        }
-        this.map.population = [];
-        endMark = performance.mark('aaa');
-        console.log(endMark.startTime - startMark.startTime);
-        this.updateWorker.postMessage({
-            type: 'createDescendants',
-            payload: JSON.parse(JSON.stringify(replicators))
-        })
-    }
-
-    levelUp(){
-        this.map.nextLevel();
-        this.initialMapData = this.map.toJSON();
-        Object.keys(this.neuronTypes).forEach(id => {
-            this.sendNeuronContext(this.neuronTypes[id].type);
+            this[event.target].removeEventListener(event.name, this[event.handler]);
         });
-        this.mapRenderer.clear();
-        this.mapRenderer.render();
     }
 
-    updateStats() {
-        this.statsView.stats = [
+    _savePopulationHandler(e){
+        this._serviceContainer.get('population').then(srv => {
+            srv.save({
+                training: this._training.id,
+                agents: Object.values(e.board.agents),
+                gene_number: e.geneNumber,
+                neurons: Object.values(e.neurons).reduce((acc, neuron) => {
+                    acc[neuron.level] = acc[neuron.level] || [];
+                    acc[neuron.level].push(neuron.type);
+                    return acc;
+                }, []),
+                actions: parseInt(e.actions),
+                level: e.level,
+                min_survivability: e.survivabilityThreshold,
+                survivability: e.armageddonStats.survivability,
+                best_survivability: e.armageddonStats.maxSurvivability,
+                generations: e.armageddonStats.generationNr
+            })
+        });
+    }
+
+    _armageddonStatsHandler(stats) {
+        this._statsView.stats = [
             {
                 label: 'Generation nr',
-                value: this.generationNr
+                value: stats.generationNr
             },
             {
                 label: 'Current population',
-                value: this.map.population.length
+                value: stats.currentPopulationSize
             },
             {
                 label: 'Old population size',
-                value: this.armageddonStats?.populationSize
+                value: stats.oldPopulationSize
             },
             {
                 label: 'Parents',
-                value: this.armageddonStats?.replicatorsNr
+                value: stats.replicatorsNr
             },
             {
                 label: 'Survivability',
-                value: this.armageddonStats?.survivability
+                value: stats.survivability
             },
             {
                 label: 'Max. survivability',
-                value: this.armageddonStats?.maxSurvivability
+                value: stats.maxSurvivability
             }
         ]
     }
 
-    startRendering = () => {
-        this.boardView.board = this.map;
-        this.updateStats();
-        this.renderAgentDetails();
+    killHandler(){
+        this._boardService.kill();
+        this.stopRendering();
     }
 
-    renderAgentDetails(agent){
-        this.selectedAgent = agent || [...this.map.population][~~(Math.random() * this.map.population.length - 1)];
-        this.agentDetailsView.agent = this.selectedAgent;
-        EventBus.publish('selectedAgent', this.selectedAgent);
+    playHandler(){
+        this._boardService.play();
     }
 
-    stopRendering(){
-        EventBus.publish('stopRender');
-        this.mapRenderer = null;
+    pauseHandler(){
+        this._boardService.pause();
     }
 
-    actionAggregator(results, currentActionValue, neuronTypes) {
-        const delta = [0, 0];
-        Object.keys(results).forEach(id => {
-            if (Object.keys(lastLevelNeurons).includes(neuronTypes[id].type)) {
-                if(results[id].val === 1){
-                    lastLevelNeurons[neuronTypes[id].type]().forEach((el, idx) => {
-                        delta[idx] += el;
-                    });
-                }
-            }
+    paramsChangeHandler(e) {
+        this._boardService.changeParam(e.detail.name, e.detail.value)
+    }
+
+    async createHandler(){
+        this.showLoader();
+        const board = await this._boardService.create();
+        this.startRendering(board);
+        this.hideLoader();
+    }
+
+    autoAgentSelectHandler(data) {
+        setTimeout(() => {
+            this.renderAgentDetails(data);
         })
-        const currentActionVector = new Vector(currentActionValue.actionValue, Object.values(this.map.size).map(el => el - Board.agentSize));
-        const deltaVectorX = new Vector([Math.abs(delta[0]), 0], Object.values(this.map.size));
-        const deltaVectorY = new Vector([0, Math.abs(delta[1])], Object.values(this.map.size));
-        let actionValue = currentActionVector[delta[0] < 0 ? 'subtract' : 'add'](deltaVectorX);
-        actionValue = actionValue[delta[1] < 0 ? 'subtract' : 'add'](deltaVectorY);
-        if(this.map.canReach(currentActionVector, actionValue)){
-            currentActionValue.oldActionValue = currentActionValue.actionValue;
-            currentActionValue.actionValue = actionValue.toJSON();
-        } else {
-            currentActionValue.oldActionValue = currentActionValue.actionValue;
+    }
+
+    agentSelectHandler(e){
+        this.renderAgentDetails(e.detail);
+    }
+
+    startRendering(board) {
+        this._boardView.board = board;
+    }
+
+    stopRendering() {
+        this._boardView.board = null;
+        this._statsView.stats = null;
+        this._agentDetailsView.agent = null;
+    }
+
+    renderAgentDetails({ agent, neurons, results }){
+        if (neurons){
+            this._agentDetailsView.neurons = neurons;
         }
-        return currentActionValue;
-
-    }
-
-    getActionReward(agent) {
-        if((
-            agent.actionValue[0] === agent.oldActionValue[0] && agent.actionValue[0] === agent.oldActionValue[0])
-        ) {
-            return Math.round(Math.random() * 10) * (Math.round(Math.random()) === 0 ? 1 : -1);
-        }
-        return Math.max(...this.map.breedingAreas.map(area => {
-            const middle = [...area[1].subtract(area[0])].map((el, idx) => ((el / 2) + area[0][idx]));
-            const distance = [
-                Math.abs(agent.actionValue[0] - middle[0]),
-                Math.abs(agent.actionValue[1] - middle[1])
-            ];
-            const oldDistance = [
-                Math.abs(agent.oldActionValue[0] - middle[0]),
-                Math.abs(agent.oldActionValue[1] - middle[1])
-            ];
-
-            return (
-                distance[0] > oldDistance[0]
-                    ? -1
-                    : (distance[0] < oldDistance[0]
-                            ? 1
-                            : 0
-                    )
-            ) + (
-                distance[1] > oldDistance[1]
-                    ? -1
-                    : (distance[1] < oldDistance[1]
-                            ? 1
-                            : 0
-                    )
-            );
-        }))
-    }
-
-    computeRequest(agent) {
-        this.sendRpc([], 'testRunNeurons', [agent.id], response => {
-            const actionResult = this.actionAggregator(
-                response,
-                {
-                    ...agent,
-                    actionValue: [...agent.actionValue],
-                    oldActionValue: [...agent.oldActionValue]
-                },
-                this.neuronTypes
-            );
-            actionResult.reward = this.getActionReward(actionResult);
-            this.map.population.forEach(agent => {
-                if (agent.id === actionResult.id) {
-                    agent.actionValue = actionResult.actionValue;
-                    agent.oldActionValue = actionResult.oldActionValue;
-                }
-            });
-            this.agentDetailsView.results = response;
-            this.agentDetailsView.agent = actionResult;
-        });
-    }
-
-    agentCreated(e){
-        this.population.push(e.data.payload);
-    }
-
-    rpcResponse(e) {
-        if (this.rpcCallbacks.has(e.data.payload.rpcId)) {
-            this.rpcCallbacks.get(e.data.payload.rpcId)(e.data.payload.response);
+        this._agentDetailsView.agent = agent;
+        this._boardView.activeAgent = agent;
+        if (results) {
+            this._agentDetailsView.results = results;
         }
     }
 
-    importAgents(agents){
-        if(!this.map){
-            this.createHandler();
-        }
-        const readyCallback = () => {
-            this.stopRendering();
-            unsubscribe();
-            this.map.population = [];
-            this.population = [];
-            this.updateWorker.postMessage({
-                type: 'importAgents',
-                payload: agents
-            });
-            this.controlsView.setReadyState();
-        };
-        const unsubscribe = EventBus.subscribe('ready', readyCallback);
+    async computeRequestHandler(e) {
+        const agent = e.detail;
+        const response = await this._boardService.requestCompute(agent)
+        this.renderAgentDetails(response);
     }
 
-    update(e){
-        EventBus.publish(e.data?.type || e.type, e);
+    async importAgents(agents){
+        this.showLoader();
+        this.stopRendering();
+        const board = await this._boardService.importAgents(agents)
+        this.startRendering(board);
+        this.hideLoader();
     }
 }
 

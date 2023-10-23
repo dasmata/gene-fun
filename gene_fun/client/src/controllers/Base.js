@@ -11,7 +11,20 @@ class Base {
 
     navigate(page, params) {
         this.showLoader();
-        window.history.pushState(params || {}, '', `${page}`);
+
+        const {search, ...restParams} = params;
+        let url = page;
+        if (search) {
+            url = `${url}?${Object.entries(search)
+                .reduce(
+                    (queryParams, entry) => {
+                        queryParams.set(entry[0], entry[1])
+                        return queryParams;
+                    }
+                    , new URLSearchParams()
+                ).toString()}`
+        }
+        window.history.pushState(restParams || {}, '', url);
         window.dispatchEvent(new Event('popstate'));
     }
 

@@ -71,13 +71,20 @@ class Index extends Base{
 
     navigateToTraining(training) {
         this.navigate(window.location.pathname, {
-            route: '/board',
+            route: `/board`,
+            search: {training: training.id},
             training: training
         });
     }
 
     async init(){
+        const trainingId = (new URLSearchParams(window.location.search)).get('training');
         const trainingService = await this._serviceContainer.get('training');
+        if (trainingId) {
+           const training = await trainingService.getTraining(trainingId);
+           this.navigateToTraining(training);
+           return;
+        }
         this._trainings = await trainingService.getAll(this._queryParams.get('page'));
         this.hideLoader();
         this._views.trainings.trainings = this._trainings;

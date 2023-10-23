@@ -16,8 +16,10 @@ class Stats extends HTMLElement {
 
     renderStats(){
         this._shadowRoot.innerHTML = '';
+        if (!this._stats) {
+            return;
+        }
         const template = document.getElementById('stats-tpl').content.cloneNode(true);
-
         this._stats.forEach(stat => {
             const el = document.createElement('stats-row-view');
             el.setAttribute('label', stat.label);

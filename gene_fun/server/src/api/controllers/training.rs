@@ -15,10 +15,10 @@ use crate::api::services::PopulationService;
 struct TrainingData {
     training: Training,
     generations: Option<u32>,
-    level: u16,
-    actions: u64,
-    gene_number: u32,
-    populations_size: usize
+    level: Option<u16>,
+    actions: Option<u64>,
+    gene_number: Option<u32>,
+    populations_size: Option<usize>
 }
 
 pub fn get_router(Extension(state): Extension<Arc<AppState>>) -> Router {
@@ -54,14 +54,28 @@ async fn list_trainings(
                 training: Some(training_id.to_owned()),
             })
             .await;
-        trainings_data.push(TrainingData {
-            training,
-            generations: populations[0].generations,
-            level: populations[0].level,
-            actions: populations[0].actions,
-            gene_number: populations[0].gene_number,
-            populations_size: populations[0].agents.len(),
-        })
+        trainings_data.push(match populations.len() {
+            0 => {
+                TrainingData {
+                    training,
+                    generations: None,
+                    level: None,
+                    actions: None,
+                    gene_number: None,
+                    populations_size: None
+                }
+            },
+            _ => {
+                TrainingData {
+                    training,
+                    generations: populations[0].generations,
+                    level: Some(populations[0].level),
+                    actions: Some(populations[0].actions),
+                    gene_number: Some(populations[0].gene_number),
+                    populations_size: Some(populations[0].agents.len())
+                }
+            }
+        });
     }
 
     Json(trainings_data).into_response()

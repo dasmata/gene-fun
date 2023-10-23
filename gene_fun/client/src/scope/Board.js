@@ -1,6 +1,5 @@
 import { SpawningBounds } from "./SpawningBounds.js";
 import { Observable } from "../engine/Observable.js";
-import { EventBus } from "../EventBus.js";
 import { Vector } from "./Vector.js";
 import { shuffle } from "../engine/utils.js";
 
@@ -17,14 +16,17 @@ class Board extends Observable{
     walls = [];
     locationIdx;
 
-    constructor(size, levels, level = 0) {
+    _eventBus
+
+    constructor(size, levels, level = 0, eventBus) {
         super();
         this.size = size;
         this.levels = levels;
         this.level = level;
         this.population = [];
+        this._eventBus = eventBus;
         this.initLevel();
-        EventBus.subscribe('paramChange', e => {
+        this._eventBus.subscribe('paramChange', e => {
             if(typeof this[e.name] !== 'undefined'){
                 this[e.name] = e.value;
                 this.initLevel();
@@ -38,7 +40,7 @@ class Board extends Observable{
         this.locationIdx = new Set();
         this.population.forEach(agent => {
             this.locationIdx.add(`${agent.actionValue?.[0]},${agent.actionValue?.[1]}`);
-        })
+        });
     }
 
     initLevel() {
@@ -187,7 +189,7 @@ class Board extends Observable{
         if(!this.levels[this.level]){
             throw new Error('No more levels');
         }
-        EventBus.publish('paramChange', {
+        this._eventBus.publish('paramChange', {
             name: 'level',
             value: this.level
         })

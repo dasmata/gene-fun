@@ -13,7 +13,6 @@ class App {
     _pageContent;
 
     async init() {
-
         await this.bootstrapRoute(window.location.pathname);
 
         addEventListener('popstate', () => {
@@ -25,6 +24,7 @@ class App {
     async bootstrapRoute(route) {
         if (!routes[route]) {
             console.log('404 Not Found!');
+            return;
         }
 
         this._page?.destroy?.();
