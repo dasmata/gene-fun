@@ -1,7 +1,6 @@
 import { Vector } from "../scope/Vector.js";
 import { Board } from "../scope/Board.js";
 import { neuronPool } from "../scope/neurons/neuronPool.js";
-import { FileWriter } from "../FileWriter.js";
 
 
 const STATUS_PAUSED = 0;
@@ -147,17 +146,6 @@ class BoardService {
         })
     }
 
-    save() {
-        const population = type === 'best' ?  this._bestPopulation : this._board?.population;
-        const filename = type === 'best' ?  'bestPopulation' : 'currentPopulation';
-        if(!population?.length){
-            console.error('Not enough data');
-            return;
-        }
-        const writer = new FileWriter()
-        writer.download(JSON.stringify(population), `${filename}.json`);
-    }
-
     _handleWorkerReady(){
         this._board.setPopulation(this._population);
 
@@ -291,8 +279,7 @@ class BoardService {
         Object.keys(this._neuronTypes).forEach(id => {
             this.sendNeuronContext(this._neuronTypes[id].type);
         });
-        this._mapRenderer.clear();
-        this._mapRenderer.render();
+        this._eventBusService.publish('levelUp', this._board);
     }
 
     actionAggregator(results, currentActionValue, neuronTypes) {
@@ -432,6 +419,14 @@ class BoardService {
 
     get survivabilityThreshold() {
         return this._survivabilityThreshold;
+    }
+
+    get population() {
+        return this._board.population
+    }
+
+    get bestPopulation(){
+        return this._bestPopulation;
     }
 }
 

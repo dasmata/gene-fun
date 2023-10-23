@@ -6,12 +6,14 @@ import "../Components/import/Import.js";
 import "../Components/stats/Stats.js";
 import "../Components/agentDetails/AgendDetails.js";
 import "../Components/board/Board.js";
+import { FileWriter } from "../FileWriter.js";
 
 class Page extends Base {
     _controlsView;
     _statsView;
     _boardView;
     _agentDetailsView;
+    _importView;
 
     _training;
     _boardService;
@@ -23,10 +25,17 @@ class Page extends Base {
         { target: '_controlsView', name: 'pause', handler: 'pauseHandler' },
         { target: '_controlsView', name: 'kill', handler: 'killHandler' },
         { target: '_controlsView', name: 'paramChange', handler: 'paramsChangeHandler' },
+
         { target: '_agentDetailsView', name: 'computeRequest', handler: 'computeRequestHandler' },
+
         { target: '_boardView', name: 'agentSelect', handler: 'agentSelectHandler' },
+
+        { target: '_importView', name: 'saveCurrent', handler: 'saveCurrentHandler' },
+        { target: '_importView', name: 'saveBest', handler: 'saveBestHandler' },
+        { target: '_importView', name: 'importAgents', handler: 'importAgentsHandler' },
+
         { target: 'eventBus', name: 'selectedAgent', handler: 'autoAgentSelectHandler' },
-        { target: 'eventBus', name: 'updateSelectedAgent', handler: 'autoAgentSelectHandler' }
+        { target: 'eventBus', name: 'selectedAgentUpdate', handler: 'autoAgentSelectHandler' }
     ]
 
     constructor(serviceContainer){
@@ -73,6 +82,7 @@ class Page extends Base {
         this._statsView = document.querySelector('stats-view');
         this._agentDetailsView = document.querySelector('agent-details-view');
         this._boardView = document.querySelector('board-view');
+        this._importView = document.querySelector('import-view');
 
         this._controlsView.setAttribute('actions', `${this._boardService.actions}`);
         this._controlsView.setAttribute('gene-number', `${this._boardService.geneNumber}`);
@@ -185,7 +195,7 @@ class Page extends Base {
     }
 
     agentSelectHandler(e){
-        this.renderAgentDetails(e.detail);
+        this._boardService.selectAgent(e.detail.agent);
     }
 
     startRendering(board) {
@@ -213,6 +223,30 @@ class Page extends Base {
         const agent = e.detail;
         const response = await this._boardService.requestCompute(agent)
         this.renderAgentDetails(response);
+    }
+
+    saveCurrentHandler(e) {
+        this.save('current')
+    }
+
+    saveBestHandler(e) {
+        this.save('best')
+    }
+
+    importAgentsHandler(e) {
+        this.importAgents(e.detail);
+    }
+
+
+    save(type) {
+        const population = type === 'best' ?  this._boardService.bestPopulation : this._boardService.population;
+        const filename = type === 'best' ?  'bestPopulation' : 'currentPopulation';
+        if(!population?.length){
+            console.error('Not enough data');
+            return;
+        }
+        const writer = new FileWriter()
+        writer.download(JSON.stringify(population), `${filename}.json`);
     }
 
     async importAgents(agents){
