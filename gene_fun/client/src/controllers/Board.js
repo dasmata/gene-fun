@@ -35,7 +35,8 @@ class Page extends Base {
         { target: '_importView', name: 'importAgents', handler: 'importAgentsHandler' },
 
         { target: 'eventBus', name: 'selectedAgent', handler: 'autoAgentSelectHandler' },
-        { target: 'eventBus', name: 'selectedAgentUpdate', handler: 'autoAgentSelectHandler' }
+        { target: 'eventBus', name: 'selectedAgentUpdate', handler: 'autoAgentSelectHandler' },
+        { target: 'eventBus', name: 'levelUp', handler: 'levelUpHandler' }
     ]
 
     constructor(serviceContainer){
@@ -192,6 +193,11 @@ class Page extends Base {
         setTimeout(() => {
             this.renderAgentDetails(data);
         })
+    }
+
+    levelUpHandler(board) {
+        this.stopRendering();
+        this.startRendering(board);
     }
 
     agentSelectHandler(e){

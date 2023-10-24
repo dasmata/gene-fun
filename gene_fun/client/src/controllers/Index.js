@@ -37,7 +37,7 @@ class Index extends Base{
             const service = await this._serviceContainer.get('training');
             await service.remove(e.detail);
 
-            this._trainings = this._trainings.filter(t => t.id !== e.detail);
+            this._trainings = this._trainings.filter(t => t.training.id !== e.detail);
             this._views.trainings.trainings = this._trainings;
         } catch (e) {
             alert('could not delete training');
