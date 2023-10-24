@@ -139,7 +139,8 @@ class Page extends Base {
                 min_survivability: e.survivabilityThreshold,
                 survivability: e.armageddonStats.survivability,
                 best_survivability: e.armageddonStats.maxSurvivability,
-                generations: e.armageddonStats.generationNr
+                generations: e.armageddonStats.generationNr,
+                parents: e.parents || []
             })
         });
     }

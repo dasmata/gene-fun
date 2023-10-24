@@ -33,7 +33,9 @@ pub struct CreatePopulationParams {
     pub level: u16,
     pub gene_number: u32,
     pub min_survivability: u8,
-    pub generations: Option<u32>
+    pub survivability: f32,
+    pub generations: u32,
+    pub parents: Vec<Agent>
 }
 
 #[derive(Serialize, Deserialize)]
@@ -46,6 +48,8 @@ pub struct Population {
     pub level: u16,
     pub gene_number: u32,
     pub min_survivability: u8,
+    pub survivability: f32,
     pub date: i64,
-    pub generations: Option<u32>
+    pub generations: u32,
+    pub parents: Vec<Agent>
 }

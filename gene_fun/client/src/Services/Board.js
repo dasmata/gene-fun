@@ -175,7 +175,8 @@ class BoardService {
             neurons: this._neuronMap,
             level: this._level,
             survivabilityThreshold: this._survivabilityThreshold,
-            generations: this._armageddonStats.generationNr
+            generations: this._armageddonStats.generationNr,
+            parents: this._armageddonStats.replicators
         }
     }
 
@@ -254,6 +255,7 @@ class BoardService {
             agentsPerArea,
             generationNr: this._generationNr,
             replicatorsNr: replicators.length,
+            replicators: replicators,
             oldPopulationSize: this._board.population.length,
             currentPopulationSize: this._board.population.length,
             survivability,
