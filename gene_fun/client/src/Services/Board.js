@@ -1,6 +1,6 @@
 import { Vector } from "../scope/Vector.js";
 import { Board } from "../scope/Board.js";
-import { neuronPool } from "../scope/neurons/neuronPool.js";
+import { neuronPool, neuronMap } from "../scope/neurons/neuronPool.js";
 
 
 const STATUS_PAUSED = 0;
@@ -13,11 +13,7 @@ const lastLevelNeurons = {
     mr : () => [Board.agentSize, 0],
     ml: () => [-1 * Board.agentSize, 0],
     mu: () => [0, -1 * Board.agentSize],
-    md: () => [0, Board.agentSize],
-    mrand: () => [
-        Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1),
-        Math.round(Math.random()) * Board.agentSize * (Math.round(Math.random()) === 0 ? 1 : -1)
-    ]
+    md: () => [0, Board.agentSize]
 };
 
 const methodEventsMap = {
@@ -40,6 +36,8 @@ class BoardService {
     _board;
 
     _neuronTypes;
+    _neuronMap;
+
     _population;
     _initialMapData;
     _status = STATUS_INITIALIZED;
@@ -56,6 +54,7 @@ class BoardService {
         });
         this._update = this._update.bind(this);
         this._neuronTypes = {};
+        this._neuronMap = neuronMap;
         this._population = [];
     }
 
@@ -136,7 +135,7 @@ class BoardService {
                         '../scope/neurons/ScopeNeuron.js',
                         '../scope/neurons/VisionNeuron.js',
                     ],
-                    neurons: neuronPool(this._board),
+                    neurons: neuronPool(this._neuronMap),
                     populationSize: this._populationSize,
                     geneNumber: this._geneNumber,
                     minActions: this._actions,
@@ -156,16 +155,7 @@ class BoardService {
         this._eventBusService.publish('armageddonStats', this._armageddonStats);
 
         if (this._status === STATUS_RUNNING) {
-            this._eventBusService.publish('savePopulation', {
-                board: this._board.toJSON(),
-                armageddonStats: this._armageddonStats,
-                actions: this._actions,
-                geneNumber: this._geneNumber,
-                neurons: this._neuronTypes,
-                level: this._level,
-                survivabilityThreshold: this._survivabilityThreshold,
-                generations: this._armageddonStats.generationNr
-            });
+            this._eventBusService.publish('savePopulation', this.getPopulationSaveData());
             this.play();
             return;
         }
@@ -173,6 +163,20 @@ class BoardService {
             this.sendRpc([], 'setAgentsActionValues', [this._board.toJSON().agents], () => {
                 console.log('Agents set on map');
             })
+        }
+    }
+
+    getPopulationSaveData() {
+        return {
+            board: this._board.toJSON(),
+            armageddonStats: this._armageddonStats,
+            actions: this._actions,
+            geneNumber: this._geneNumber,
+            neurons: this._neuronMap,
+            level: this._level,
+            survivabilityThreshold: this._survivabilityThreshold,
+            generations: this._armageddonStats.generationNr,
+            parents: this._armageddonStats.replicators
         }
     }
 
@@ -251,6 +255,7 @@ class BoardService {
             agentsPerArea,
             generationNr: this._generationNr,
             replicatorsNr: replicators.length,
+            replicators: replicators,
             oldPopulationSize: this._board.population.length,
             currentPopulationSize: this._board.population.length,
             survivability,
@@ -407,6 +412,7 @@ class BoardService {
         this._geneNumber = config.geneNumber || this._geneNumber;
         this._generationNr = config.generationNr || this._generationNr;
         this._armageddonStats.generationNr = this._generationNr;
+        this._neuronMap= config.neuronMap ||  this._neuronMap;
     }
 
     get actions() {

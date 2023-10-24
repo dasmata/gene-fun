@@ -68,7 +68,7 @@ async fn list_trainings(
             _ => {
                 TrainingData {
                     training,
-                    generations: populations[0].generations,
+                    generations: Some(populations[0].generations),
                     level: Some(populations[0].level),
                     actions: Some(populations[0].actions),
                     gene_number: Some(populations[0].gene_number),

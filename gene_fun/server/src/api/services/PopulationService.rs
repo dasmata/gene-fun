@@ -76,8 +76,10 @@ impl PopulationService {
             level: population_data.level,
             gene_number: population_data.gene_number,
             min_survivability: population_data.min_survivability,
+            survivability: population_data.survivability,
             date: Utc::now().timestamp(),
-            generations: population_data.generations
+            generations: population_data.generations,
+            parents: population_data.parents
         };
         let pop_result = to_document(&pop);
         let document = match pop_result {
