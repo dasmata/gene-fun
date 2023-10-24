@@ -1,4 +1,13 @@
+use std::any::Any;
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct NeuronVal {
+    activation: String,
+    constructor: String,
+    summation: u16
+}
 
 
 #[derive(Serialize, Deserialize)]
@@ -19,7 +28,7 @@ pub struct Agent {
 pub struct CreatePopulationParams {
     pub training: String,
     pub agents: Vec<Agent>,
-    pub neurons: Vec<Vec<String>>,
+    pub neurons: Vec<HashMap<String, NeuronVal>>,
     pub actions: u64,
     pub level: u16,
     pub gene_number: u32,
@@ -32,7 +41,7 @@ pub struct Population {
     pub id: String,
     pub training: String,
     pub agents: Vec<Agent>,
-    pub neurons: Vec<Vec<String>>,
+    pub neurons: Vec<HashMap<String, NeuronVal>>,
     pub actions: u64,
     pub level: u16,
     pub gene_number: u32,

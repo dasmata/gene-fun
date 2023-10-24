@@ -4,63 +4,131 @@ import { seeDownNeuron } from "./seeDownNeuron.js";
 import { seeLeftNeuron } from "./seeLeftNeuron.js";
 import { tanhNeuron } from "./tanhNeuron.js";
 import { customSigmoidNeuron } from "./customSigmoidNeuron.js";
+import { sigmoidNeuron } from "./sigmoidNeuron.js";
+import { nothingNeuron } from "./nothingNeuron.js";
+
+const activationFunction = {
+    'seeLeftNeuron': seeLeftNeuron,
+    'seeUpNeuron': seeUpNeuron,
+    'seeDownNeuron': seeDownNeuron,
+    'seeRightNeuron': seeRightNeuron,
+    'tanhNeuron': tanhNeuron,
+    'customSigmoidNeuron': customSigmoidNeuron,
+    'sigmoidNeuron': sigmoidNeuron,
+    'nothingNeuron': nothingNeuron
+}
+
+const neuronMap = [
+    {
+        'sl': {
+            activation: 'seeLeftNeuron',
+            constructor: 'VisionNeuron',
+            summation: 2
+        },
+        'sr': {
+            activation: 'seeRightNeuron',
+            constructor: 'VisionNeuron',
+            summation: 2
+        },
+        'su': {
+            activation: 'seeUpNeuron',
+            constructor: 'VisionNeuron',
+            summation: 2},
+        'sd': {
+            activation: 'seeDownNeuron',
+            constructor: 'VisionNeuron',
+            summation: 2
+        }
+    },
+    {
+        'pv1': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 6
+        },
+        'pv2': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 6
+        },
+        'pv3': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 6
+        },
+        'pv4': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 6
+        },
+    },
+    {
+        'pv5': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 3
+        },
+        'pv6': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 3
+        },
+        'pv7': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 3
+        },
+        'pv8': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 3
+        },
+        'pv9': {
+            activation: 'tanhNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 3
+        },
+    },
+    {
+        'ml': {
+            activation: 'customSigmoidNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 1
+        },
+        'mr': {
+            activation: 'customSigmoidNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 1
+        },
+        'mu': {
+            activation: 'customSigmoidNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 1
+        },
+        'md': {
+            activation: 'customSigmoidNeuron',
+            constructor: 'ScopeNeuron',
+            summation: 1
+        },
+    },
+]
 
 const neuronPool = (() => {
-    const memoParams = [];
-    const memoValues = [];
-    const neuronMap = [
-        {
-            'sl': [seeLeftNeuron.toString(), 'VisionNeuron', 2],
-            'sr': [seeRightNeuron.toString(), 'VisionNeuron', 2],
-            'su': [seeUpNeuron.toString(), 'VisionNeuron', 2],
-            'sd': [seeDownNeuron.toString(), 'VisionNeuron', 2],
-        },
-        {
-            'pv1': [tanhNeuron.toString(), 'ScopeNeuron', 6],
-            'pv2': [tanhNeuron.toString(), 'ScopeNeuron', 6],
-            'pv3': [tanhNeuron.toString(), 'ScopeNeuron', 6],
-            'pv4': [tanhNeuron.toString(), 'ScopeNeuron', 6],
-        },
-        {
-            'pv5': [tanhNeuron.toString(), 'ScopeNeuron', 3],
-            'pv6': [tanhNeuron.toString(), 'ScopeNeuron', 3],
-            'pv7': [tanhNeuron.toString(), 'ScopeNeuron', 3],
-            'pv8': [tanhNeuron.toString(), 'ScopeNeuron', 3],
-            'pv9': [tanhNeuron.toString(), 'ScopeNeuron', 3],
-        },
-        {
-            // 'mrand': moveActivationFunction.toString(), 'ScopeNeuron', 1],
-            'ml': [customSigmoidNeuron.toString(), 'ScopeNeuron', 1],
-            'mr': [customSigmoidNeuron.toString(), 'ScopeNeuron', 1],
-            'mu': [customSigmoidNeuron.toString(), 'ScopeNeuron', 1],
-            'md': [customSigmoidNeuron.toString(), 'ScopeNeuron', 1],
-        },
-    ]
-    return (world) => {
-        const cacheId = memoParams.indexOf(world);
-        if (cacheId !== -1) {
-            return memoValues[cacheId];
-        }
-
-        const pool = neuronMap.reduce((acc, level, idx) => {
+    return (map) => {
+        return (map || neuronMap).reduce((acc, level, idx) => {
             Object.keys(level).forEach(type => {
-                let className = 'ScopeNeuron';
-                let neuronFunc = level[type];
-                let summationType = 1;
-                if(Array.isArray(neuronFunc)){
-                    className = neuronFunc[1]
-                    summationType = neuronFunc[2]
-                    neuronFunc = neuronFunc[0];
-                }
-                acc[type] = [className, neuronFunc, idx, type, summationType]
+                let neuronData = level[type];
+                acc[type] = [
+                    neuronData.constructor,
+                    activationFunction[neuronData.activation].toString(),
+                    idx,
+                    type,
+                    neuronData.summation
+                ]
             })
             return acc;
         }, {});
-
-        memoValues.push(pool);
-        memoParams.push(world);
-        return pool;
     }
 })()
 
-export { neuronPool }
+export { neuronPool, neuronMap }

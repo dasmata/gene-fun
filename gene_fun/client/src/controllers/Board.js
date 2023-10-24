@@ -36,7 +36,9 @@ class Page extends Base {
 
         { target: 'eventBus', name: 'selectedAgent', handler: 'autoAgentSelectHandler' },
         { target: 'eventBus', name: 'selectedAgentUpdate', handler: 'autoAgentSelectHandler' },
-        { target: 'eventBus', name: 'levelUp', handler: 'levelUpHandler' }
+        { target: 'eventBus', name: 'levelUp', handler: 'levelUpHandler' },
+        { target: 'eventBus', name: 'savePopulation', handler: '_savePopulationHandler' },
+        { target: 'eventBus', name: 'armageddonStats', handler: '_armageddonStatsHandler' }
     ]
 
     constructor(serviceContainer){
@@ -49,33 +51,46 @@ class Page extends Base {
     async init() {
         this._training = window.history.state?.training;
         this._boardService = await this._serviceContainer.get('board');
-        let population;
+        let population = [];
 
         if (this._training) {
             const service = await this._serviceContainer.get('population')
-            population = await service.getAll(1, {
-                filters: {training: this._training.id},
-                perPage: 1
-            });
-            if (population.length) {
-                config.actions = population[0].actions;
-                config.level = population[0].level;
-                config.minSurvivability = population[0].min_survivability;
-                config.neurons = population[0].neurons;
-                config.generationNr = population[0].generations;
-                config.geneNumber = population[0].gene_number;
+            try{
+                population = await service.getAll(1, {
+                    filters: {training: this._training.id},
+                    perPage: 1
+                });
+            } catch (e) {
+                console.error('Could not load population data', e);
             }
+            await this.initFromPopulationData(population[0] || null);
+        }
+
+    }
+
+    async initFromPopulationData(population) {
+        if (population) {
+            config.actions = population.actions;
+            config.level = population.level;
+            config.minSurvivability = population.min_survivability;
+            config.neurons = population.neurons;
+            config.generationNr = population.generations;
+            config.geneNumber = population.gene_number;
+            config.neuronMap = population.neurons;
         }
         this.initBoard(config)
-        if (population.length) {
+        this.showLoader();
+        this.stopRendering();
+        if (population) {
             this._controlsView.setAttribute('actions', config.actions);
             this._controlsView.setAttribute('level', config.level);
             this._controlsView.setAttribute('gene-number', config.geneNumber);
             this._controlsView.setAttribute('survivability-threshold', config.minSurvivability);
             this._controlsView.setReadyState();
-
-            await this.importAgents(population[0].agents)
+            const board = await this._boardService.importAgents(population.agents);
+            this.startRendering(board);
         }
+        this.hideLoader();
     }
 
     initBoard(config) {
@@ -94,21 +109,18 @@ class Page extends Base {
         this._events.forEach((event, idx) => {
             this[event.handler] = this[event.handler].bind(this);
             if (event.target === 'eventBus'){
-                this._events[idx] = this._eventBusService.subscribe(event.name, this[event.handler]);
+                this._events[idx].unsubscribe  = this._eventBusService.subscribe(event.name, this[event.handler]);
             } else {
                 this[event.target].addEventListener(event.name, this[event.handler]);
             }
         });
-        this._events.push(this._eventBusService.subscribe('savePopulation', this._savePopulationHandler.bind(this)));
-        this._events.push(this._eventBusService.subscribe('armageddonStats', this._armageddonStatsHandler.bind(this)));
-
         this.hideLoader();
     }
 
     destroy() {
         this._events.forEach(event => {
-            if (typeof event === 'function') {
-                event();
+            if (typeof event.unsubscribe === 'function') {
+                event.unsubscribe();
                 return;
             }
             this[event.target].removeEventListener(event.name, this[event.handler]);
@@ -121,11 +133,7 @@ class Page extends Base {
                 training: this._training.id,
                 agents: Object.values(e.board.agents),
                 gene_number: e.geneNumber,
-                neurons: Object.values(e.neurons).reduce((acc, neuron) => {
-                    acc[neuron.level] = acc[neuron.level] || [];
-                    acc[neuron.level].push(neuron.type);
-                    return acc;
-                }, []),
+                neurons: e.neurons,
                 actions: parseInt(e.actions),
                 level: e.level,
                 min_survivability: e.survivabilityThreshold,
@@ -252,15 +260,24 @@ class Page extends Base {
             return;
         }
         const writer = new FileWriter()
-        writer.download(JSON.stringify(population), `${filename}.json`);
+        const saveData = this._boardService.getPopulationSaveData()
+        const obj = {
+            agents: population,
+            gene_number: saveData.geneNumber,
+            neurons: saveData.neurons,
+            actions: parseInt(saveData.actions),
+            level: saveData.level,
+            min_survivability: saveData.survivabilityThreshold,
+            survivability: saveData.armageddonStats.survivability,
+            best_survivability: saveData.armageddonStats.maxSurvivability,
+            generations: saveData.armageddonStats.generationNr
+        }
+        writer.download(JSON.stringify(obj), `${filename}.json`);
     }
 
-    async importAgents(agents){
-        this.showLoader();
-        this.stopRendering();
-        const board = await this._boardService.importAgents(agents)
-        this.startRendering(board);
-        this.hideLoader();
+    async importAgents(data){
+        this.destroy();
+        await this.initFromPopulationData(data)
     }
 }
 

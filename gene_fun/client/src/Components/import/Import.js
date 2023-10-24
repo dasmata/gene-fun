@@ -28,11 +28,9 @@ class Import extends HTMLElement {
     handleAgentsImport(e){
         const reader = new FileReader();
         reader.addEventListener('load', evt => {
-            const agents = JSON.parse(evt.target.result);
-            if(agents?.length > 0){
-                const event = new CustomEvent('importAgents', { detail: agents })
-                this.dispatchEvent(event);
-            }
+            const data = JSON.parse(evt.target.result);
+            const event = new CustomEvent('importAgents', { detail: data })
+            this.dispatchEvent(event);
         });
         reader.readAsText(e.target.files[0])
     }
